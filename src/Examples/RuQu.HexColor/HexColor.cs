@@ -2,7 +2,7 @@
 {
     public static class HexColor
     {
-        private static readonly Predicate<IInput<char>> tag_Start = Parser.Is('#').Riquired("Must start with #").RiquiredNext("Must has content");
+        private static readonly Predicate<IInput<char>> tag_Start = Chars.Is('#').Riquired("Must start with #").RiquiredNext("Must has content");
 
         private static byte HexOneColor(InputString input) => System.Convert.ToByte(input.TakeString(2), 16);
 

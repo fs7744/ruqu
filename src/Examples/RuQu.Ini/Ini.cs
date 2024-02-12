@@ -18,7 +18,7 @@ namespace RuQu
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             while (!input.IsEof)
             {
-                if (!(Whitespace(input) || Comment(input) || Section(input, dict)))
+                if (!(Chars.IngoreWhiteSpace(input) || Comment(input) || Section(input, dict)))
                 {
                     throw new NotSupportedException(input.Current.ToString());
                 }
@@ -31,14 +31,6 @@ namespace RuQu
             throw new NotImplementedException();
         }
 
-        public bool Comment(InputString input)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Whitespace(InputString input)
-        {
-            throw new NotImplementedException();
-        }
+        public Predicate<IInput<char>> Comment = Chars.In(";#/").Then(Chars.Any.RepeatUntil(Chars.Is('\n')).Ingore().Then(Chars.Is('\n').Then(i => i.MoveNext())));
     }
 }
