@@ -4,7 +4,7 @@
     {
         private static readonly Tag<InputString> tag_Start = Tag.Char('#').Riquired("Must start with #").RiquiredNext("Must has content");
 
-        public static byte HexOneColor(InputString input) => System.Convert.ToByte(input.TakeString(2), 16);
+        private static byte HexOneColor(InputString input) => System.Convert.ToByte(input.TakeString(2), 16);
 
         public static (byte red, byte green, byte blue) Convert(string str)
         {
