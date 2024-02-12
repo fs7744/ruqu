@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace RuQu.Benchmark
 {
+    [MemoryDiagnoser]
     public class HexColorTest
     {
 
