@@ -1,6 +1,6 @@
 ﻿namespace RuQu
 {
-    public class InputString : IInput<string, char>
+    public class InputString : IInput<char>
     {
         private readonly string data;
 
@@ -12,6 +12,8 @@
         public int Index { get; private set; }
 
         public char Current => data[Index];
+
+        public bool IsEof => Index >= data.Length;
 
         public bool MoveNext()
         {

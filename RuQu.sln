@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.HexColor.Benchmark", "test\Benchmarks\RuQu.HexColor.Benchmark\RuQu.HexColor.Benchmark.csproj", "{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.Ini", "src\Examples\RuQu.Ini\RuQu.Ini.csproj", "{F54F3868-9371-42E2-82A3-E9D959BBF486}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F54F3868-9371-42E2-82A3-E9D959BBF486}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F54F3868-9371-42E2-82A3-E9D959BBF486}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F54F3868-9371-42E2-82A3-E9D959BBF486}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F54F3868-9371-42E2-82A3-E9D959BBF486}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +58,7 @@ Global
 		{9E75008F-4783-435C-94B3-A2F42149DB80} = {E7B2B6F9-A64D-435A-9169-31D8DD8ECB50}
 		{417CB96E-B32B-4088-A4CF-E8322D1C6BA6} = {56C639C6-004C-497F-9D9C-FA3DFCE625FB}
 		{F34E1788-D09F-4325-9DD6-C3CBB749E7CC} = {417CB96E-B32B-4088-A4CF-E8322D1C6BA6}
+		{F54F3868-9371-42E2-82A3-E9D959BBF486} = {E7B2B6F9-A64D-435A-9169-31D8DD8ECB50}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0866A552-5E78-4403-94E6-2C539A60EECE}

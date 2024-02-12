@@ -1,14 +1,12 @@
 ﻿namespace RuQu
 {
-    public interface IInput
+    public interface IInput<Y>
     {
+        Y Current { get; }
         int Index { get; }
 
         bool MoveNext();
-    }
 
-    public interface IInput<X, Y> : IInput where X : IEnumerable<Y>
-    {
-        Y Current { get; }
+        bool IsEof { get; }
     }
 }
