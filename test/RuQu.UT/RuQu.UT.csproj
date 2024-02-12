@@ -22,4 +22,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Examples\RuQu.HexColor\RuQu.HexColor.csproj" />
+    <ProjectReference Include="..\..\src\RuQu\RuQu.csproj" />
+  </ItemGroup>
+
 </Project>
