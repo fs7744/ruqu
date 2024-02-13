@@ -17,6 +17,17 @@
             return t;
         };
 
+        public static Action<IPeeker<T>> NoMore<T>(this Is<T> predicate, string ex) => NoMore<T>(predicate, i => new FormatException(ex));
+
+        public static Action<IPeeker<T>> NoMore<T>(this Is<T> predicate, Func<IPeeker<T>, Exception> ex) => i =>
+        {
+            var c = predicate(i, out var t);
+            if (c > 0)
+            {
+                throw ex(i);
+            }
+        };
+
         public static Is<T> Is<T>(Func<T, bool> predicate, int count) => (IPeeker<T> i, out T t) =>
         {
             if (i.TryPeek(out t) && predicate(t))
