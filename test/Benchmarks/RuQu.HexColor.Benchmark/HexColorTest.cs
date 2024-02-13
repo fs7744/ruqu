@@ -60,15 +60,15 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
-        public void Sprache_HexColor()
+        public void Superpower_HexColor()
         {
-            (byte red, byte green, byte blue) = SpracheHexColorTest.Parse("#2F14DF");
+            (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");
         }
 
         [Benchmark]
-        public void SSuperpower_HexColor()
+        public void Sprache_HexColor()
         {
-            (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");
+            (byte red, byte green, byte blue) = SpracheHexColorTest.Parse("#2F14DF");
         }
     }
 }

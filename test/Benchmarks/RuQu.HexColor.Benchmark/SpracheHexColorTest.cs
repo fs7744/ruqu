@@ -10,10 +10,8 @@ namespace RuQu.Benchmark
         {
             identifier =
             from leading in Sprache.Parse.Char('#').Once()
-            from red in Sprache.Parse.LetterOrDigit.Repeat(2).Text()
-            from green in Sprache.Parse.LetterOrDigit.Repeat(2).Text()
-            from blue in Sprache.Parse.LetterOrDigit.Repeat(2).Text()
-            select (Convert.ToByte(red, 16), Convert.ToByte(green, 16), Convert.ToByte(blue, 16));
+            from s in Sprache.Parse.LetterOrDigit.Repeat(6).Text()
+            select (Convert.ToByte(s[0..2], 16), Convert.ToByte(s[2..4], 16), Convert.ToByte(s[4..6], 16));
         }
 
         public static (byte red, byte green, byte blue) Parse(string content) => identifier.Parse(content);
