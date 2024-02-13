@@ -1,19 +1,17 @@
-﻿using RuQu.Strings;
-
-namespace RuQu
+﻿namespace RuQu
 {
     public interface IPeeker<T>
     {
         int Readed { get; }
 
-        bool TryPeek(int count, out PeekSlice<T> data);
+        bool TryPeek(int count, out IPeekSlice<T> data);
 
         bool TryPeek(out T data);
 
         void Read(int count);
     }
 
-    public ref struct PeekSlice<T>
+    public interface IPeekSlice<T>
     {
     }
 }

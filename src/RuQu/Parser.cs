@@ -65,5 +65,19 @@
         public static Func<IPeeker<T>, T[]> Repeat<T>(this Is<T> predicate, int maxCount, string ex) => Repeat(predicate, maxCount, i => new FormatException(ex));
 
         public static Func<IPeeker<T>, int> Count<T>(this Func<IPeeker<T>, IEnumerable<T>> predicate) => i => predicate(i).Count();
+
+        public static Func<IPeeker<T>, IPeekSlice<T>> Take<T>(int count, Func<IPeeker<T>, Exception> ex) => i =>
+        {
+            if (!i.TryPeek(count, out var d))
+            {
+                throw ex(i);
+            }
+            i.Read(count);
+            return d;
+        };
+
+        public static Func<IPeeker<T>, IPeekSlice<T>> Take<T>(int count, string ex) => Take<T>(count, i => new FormatException(ex));
+
+        public static Func<T, R> Map<T, R0, R>(this Func<T, R0> predicate, Func<R0, R> map) => i => map(predicate(i));
     }
 }

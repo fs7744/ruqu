@@ -22,7 +22,7 @@ namespace RuQu.UT
         [InlineData(" \rn ", 2, true)]
         [InlineData(" \r\n# ", 3, true)]
         [InlineData(" \n9 ", 2, true)]
-        public void IngoreWhiteSpaceTest(string s , int r, bool isEOF)
+        public void IngoreWhiteSpaceTest(string s, int r, bool isEOF)
         {
             var i = Input.From(s);
             Assert.Equal(r, Chars.IngoreWhiteSpace(i));
