@@ -1,10 +1,12 @@
-﻿namespace RuQu
+﻿using RuQu.Strings;
+
+namespace RuQu
 {
     public static partial class Input
     {
-        public static InputString From(string str)
+        public static StringPeeker From(string str)
         { 
-            return new InputString(str);
+            return new StringPeeker(str);
         }
     }
 }

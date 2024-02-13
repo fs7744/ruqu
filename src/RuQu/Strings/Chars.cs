@@ -2,19 +2,15 @@
 {
     public static partial class Chars
     {
+        public static readonly Is<char> Any = Parser.Is<char>(i => true, 1);
+        public static readonly Is<char> IsWhiteSpace = Parser.Is<char>(char.IsWhiteSpace, 1);
+        public static readonly Func<IPeeker<char>, int> IngoreWhiteSpace = IsWhiteSpace.Repeat().Count();
+        public static readonly Is<char> IsAsciiHexDigit = Parser.Is<char>(char.IsAsciiHexDigit, 1);
 
-        public static readonly Predicate<IInput<char>> IsWhiteSpace = i => char.IsWhiteSpace(i.Current);
+        public static Is<char> Is(char c) => Parser.Is<char>(i => i == c, 1);
 
-        public static readonly Predicate<IInput<char>> IngoreWhiteSpace = IsWhiteSpace.RepeatUntilNot().Ingore();
+        public static Is<char> In(char[] arrary) => Parser.Is<char>(i => arrary.Contains(i), 1);
 
-
-        public static readonly Predicate<IInput<char>> Any = i => true;
-        public static Predicate<IInput<char>> In(char[] arrary) => i => arrary.Contains(i.Current);
-
-        public static Predicate<IInput<char>> In(string str) => i => str.IndexOf(i.Current) > -1;
-
-        public static Predicate<IInput<char>> Is(char c) => i => i.Current == c;
-
-        public static Predicate<IInput<char>> Is(Func<char, bool> predicate) => i => predicate(i.Current);
+        public static Is<char> In(string str) => Parser.Is<char>(i => str.IndexOf(i) > -1, 1);
     }
 }

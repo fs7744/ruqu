@@ -2,18 +2,19 @@
 {
     public static class HexColor
     {
-        private static readonly Predicate<IInput<char>> tag_Start = Chars.Is('#').Riquired("Must start with #").RiquiredNext("Must has content");
+        private static readonly Func<IPeeker<char>, char> tag_Start = Chars.Is('#').Once("# is Required.");
 
-        private static byte HexOneColor(InputString input) => System.Convert.ToByte(input.TakeString(2), 16);
+        private static Func<IPeeker<char>, char[]> HexDigit = Chars.IsAsciiHexDigit.Repeat(6, "Must has 6 AsciiHexDigit");
 
-        public static (byte red, byte green, byte blue) Convert(string str)
+        public static (byte red, byte green, byte blue) Parse(string str)
         {
             var input = Input.From(str);
             tag_Start(input);
-            var r = (HexOneColor(input), HexOneColor(input), HexOneColor(input));
-            if (!input.IsEof)
+            var s = new string(HexDigit(input));
+            var r = (Convert.ToByte(s[1..2], 16), Convert.ToByte(s[3..4], 16), Convert.ToByte(s[5..6], 16));
+            if (input.TryPeek(out var c))
             {
-                throw new FormatException(input.Current.ToString());
+                throw new FormatException(c.ToString());
             }
             return r;
         }

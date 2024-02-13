@@ -13,8 +13,15 @@ namespace RuQu.Benchmark
     {
         private static (byte red, byte green, byte blue) HexColorHande(string str)
         {
-            if (str[0] is '#')
+            if (str.Length == 7 && str[0] is '#')
             {
+                for (var i = 1; i < 7; i++)
+                {
+                    if (!char.IsAsciiHexDigit(str[i]))
+                    {
+                        throw new FormatException("Must has 6 AsciiHexDigit");
+                    }
+                }
                 return (Convert.ToByte(str[1..2], 16), Convert.ToByte(str[3..4], 16), Convert.ToByte(str[5..6], 16));
             }
             throw new ArgumentException("No perfix with #");
@@ -29,19 +36,19 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_HexColor()
         {
-            (byte red, byte green, byte blue) = HexColor.Convert("#2F14DF");
+            (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
         }
 
-        [Benchmark]
-        public void Sprache_HexColor()
-        {
-            (byte red, byte green, byte blue) = SpracheHexColorTest.Parse("#2F14DF");
-        }
+        //[Benchmark]
+        //public void Sprache_HexColor()
+        //{
+        //    (byte red, byte green, byte blue) = SpracheHexColorTest.Parse("#2F14DF");
+        //}
 
-        [Benchmark]
-        public void SSuperpower_HexColor()
-        {
-            (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");
-        }
+        //[Benchmark]
+        //public void SSuperpower_HexColor()
+        //{
+        //    (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");
+        //}
     }
 }

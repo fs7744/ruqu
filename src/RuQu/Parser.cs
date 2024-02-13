@@ -1,100 +1,69 @@
 ﻿namespace RuQu
 {
-    public delegate bool Predicate<T>(T input);
+    public delegate int Is<T>(IPeeker<T> input, out T t);
 
     public static partial class Parser
     {
-        public static Predicate<T> Riquired<T>(this Predicate<T> predicate, Func<T, Exception> ex) => i =>
+        public static Func<IPeeker<T>, T> Once<T>(this Is<T> predicate, string ex) => Once(predicate, i => new FormatException(ex));
+
+        public static Func<IPeeker<T>, T> Once<T>(this Is<T> predicate, Func<IPeeker<T>, Exception> ex) => i =>
         {
-            if (!predicate(i))
+            var c = predicate(i, out var t);
+            if (c <= 0)
             {
                 throw ex(i);
             }
-            return true;
+            i.Read(c);
+            return t;
         };
 
-        public static Predicate<T> Riquired<T>(this Predicate<T> predicate, string ex) => Riquired(predicate, i => new FormatException(ex));
-
-        public static Predicate<IInput<T>> RiquiredNext<T>(this Predicate<IInput<T>> predicate, Func<IInput<T>, Exception> ex) => i =>
+        public static Is<T> Is<T>(Func<T, bool> predicate, int count) => (IPeeker<T> i, out T t) =>
         {
-            if (predicate(i) && !i.MoveNext())
+            if (i.TryPeek(out t) && predicate(t))
+            {
+                return count;
+            }
+            return 0;
+        };
+
+        private static IEnumerable<T> _Repeat<T>(IPeeker<T> i, Is<T> predicate)
+        {
+            var count = predicate(i, out var t);
+            while (count > 0)
+            {
+                yield return t;
+                i.Read(count);
+                count = predicate(i, out t);
+            }
+        }
+
+        public static Func<IPeeker<T>, IEnumerable<T>> Repeat<T>(this Is<T> predicate) => i => _Repeat(i, predicate);
+
+        private static IEnumerable<T> _Repeat<T>(IPeeker<T> i, Is<T> predicate, int maxCount)
+        {
+            for (int j = 0; j < maxCount; j++)
+            {
+                var count = predicate(i, out var t);
+                if (count > 0)
+                {
+                    yield return t;
+                    i.Read(count);
+                }
+            }
+        }
+
+        public static Func<IPeeker<T>, T[]> Repeat<T>(this Is<T> predicate, int maxCount, Func<IPeeker<T>, Exception> ex) => i =>
+        {
+            var array = _Repeat(i, predicate, maxCount).ToArray();
+            if (array.Length != maxCount)
             {
                 throw ex(i);
             }
-            return true;
+            return array;
         };
 
-        public static Predicate<IInput<T>> RiquiredNext<T>(this Predicate<IInput<T>> predicate, string ex) => RiquiredNext(predicate, i => new FormatException(ex));
+        public static Func<IPeeker<T>, T[]> Repeat<T>(this Is<T> predicate, int maxCount, string ex) => Repeat(predicate, maxCount, i => new FormatException(ex));
 
-        public static Predicate<IInput<T>> Repeat<T>(this Predicate<IInput<T>> predicate, int count, Func<IInput<T>, Exception> ex) => i =>
-        {
-            for (var j = 0; j < count; j++)
-            {
-                if (!predicate(i) || !i.MoveNext())
-                {
-                    throw ex(i);
-                }
-            }
-            return true;
-        };
-
-        public static Predicate<IInput<T>> Repeat<T>(this Predicate<IInput<T>> predicate, int count, string ex) => Repeat<T>(predicate, count, i => new FormatException(ex));
-
-        private static IEnumerable<T> _RepeatUntilNot<T>(IInput<T> i, Predicate<IInput<T>> predicate)
-        {
-            while (!i.IsEof && predicate(i))
-            {
-                yield return i.Current;
-                if (!i.MoveNext())
-                {
-                    break;
-                }
-            }
-        }
-
-        public static Func<IInput<T>, IEnumerable<T>> RepeatUntilNot<T>(this Predicate<IInput<T>> predicate) => i => _RepeatUntilNot(i, predicate);
-
-        public static bool Ingore<T>(this IEnumerable<T> enumerable)
-        {
-            return enumerable.Count() > 0;
-        }
-
-        public static Predicate<IInput<T>> Ingore<T>(this Func<IInput<T>, IEnumerable<T>> predicate) => i => predicate(i).Ingore();
-
-        //public static Predicate<IInput<T>> IngoreUntilNot<T>(this Predicate<IInput<T>> predicate)
-        //{
-        //    var f = RepeatUntilNot(predicate);
-        //    return i => f(i).Ingore();
-        //}
-
-        public static Predicate<IInput<T>> Then<T>(this Predicate<IInput<T>> predicate, Predicate<IInput<T>> map) => i =>
-        {
-            return predicate(i) ? map(i) : false;
-        };
-
-        private static IEnumerable<T> _RepeatUntil<T>(IInput<T> i, Predicate<IInput<T>> predicate, Predicate<IInput<T>> not)
-        {
-            while (!i.IsEof && predicate(i) && !not(i))
-            {
-                yield return i.Current;
-                if (!i.MoveNext())
-                {
-                    break;
-                }
-            }
-        }
-
-        public static Func<IInput<T>, IEnumerable<T>> RepeatUntil<T>(this Predicate<IInput<T>> predicate, Predicate<IInput<T>> not) => i => _RepeatUntil(i, predicate, not);
-
-        //public static Predicate<IInput<T>> IngoreUntil<T>(this Predicate<IInput<T>> predicate, Predicate<IInput<T>> not)
-        //{
-        //    var f = RepeatUntil(predicate, not);
-        //    return i => f(i).Ingore();
-        //}
-
-        public static Func<IInput<T>, IEnumerable<T>> Delimited<T>(this Predicate<IInput<T>> prefix, Predicate<IInput<T>> suffix)
-        {
-            return null;
-        }
+        public static Func<IPeeker<T>, int> Count<T>(this Func<IPeeker<T>, IEnumerable<T>> predicate) => i => predicate(i).Count();
     }
 }
