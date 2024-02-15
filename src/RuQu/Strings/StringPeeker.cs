@@ -34,25 +34,35 @@
 
         public bool TryPeek(int count, out IPeekSlice<char> data)
         {
-            var i = readed + count;
-            if (i >= str.Length)
+            return TryPeekOffset(1, count, out data);
+        }
+
+        public bool TryPeekOffset(int offset, int count, out IPeekSlice<char> data)
+        {
+            var i = readed + offset + count;
+            if (i > str.Length)
             {
                 data = null;
                 return false;
             }
-            data = new PeekString(str.Substring(readed + 1, count));
+            data = new PeekString(str.Substring(readed + offset, count));
             return true;
         }
 
         public bool TryPeek(out char data)
         {
-            var i = readed + 1;
+            return TryPeekOffset(1, out data);
+        }
+
+        public bool TryPeekOffset(int offset, out char data)
+        {
+            var i = readed + offset;
             if (i >= str.Length)
             {
                 data = char.MinValue;
                 return false;
             }
-            data = str[i];
+            data = str[i]; ;
             return true;
         }
     }

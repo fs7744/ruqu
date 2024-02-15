@@ -28,5 +28,26 @@ namespace RuQu.UT
             Assert.Equal(r, Chars.IngoreWhiteSpace(i));
             Assert.Equal(isEOF, i.TryPeek(out var c));
         }
+
+        [Fact]
+        public void INIParseTest()
+        {
+            var s = """
+
+
+
+                [package]
+                name="test"
+                version="1.1.2"
+                  ;sddd
+                 [package2]
+                name = "test2"
+                version = "1.1.2"
+
+                """;
+
+            var a = Ini.Parse(s);
+            Assert.Equal(4, a.Count);
+        }
     }
 }

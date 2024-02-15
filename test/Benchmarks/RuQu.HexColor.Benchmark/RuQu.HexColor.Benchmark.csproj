@@ -9,12 +9,14 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="Superpower" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Examples\RuQu.HexColor\RuQu.HexColor.csproj" />
+    <ProjectReference Include="..\..\..\src\Examples\RuQu.Ini\RuQu.Ini.csproj" />
   </ItemGroup>
 
 </Project>
