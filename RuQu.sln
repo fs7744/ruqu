@@ -7,19 +7,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1D277F12-C92
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{56C639C6-004C-497F-9D9C-FA3DFCE625FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu", "src\RuQu\RuQu.csproj", "{D8AA49BA-E65A-4085-AEA8-FD70A1FA52A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuQu", "src\RuQu\RuQu.csproj", "{D8AA49BA-E65A-4085-AEA8-FD70A1FA52A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.UT", "test\RuQu.UT\RuQu.UT.csproj", "{799A18E5-3AEE-4EAB-8CC4-387FDE556A49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuQu.UT", "test\RuQu.UT\RuQu.UT.csproj", "{799A18E5-3AEE-4EAB-8CC4-387FDE556A49}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{E7B2B6F9-A64D-435A-9169-31D8DD8ECB50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.HexColor", "src\Examples\RuQu.HexColor\RuQu.HexColor.csproj", "{9E75008F-4783-435C-94B3-A2F42149DB80}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuQu.HexColor", "src\Examples\RuQu.HexColor\RuQu.HexColor.csproj", "{9E75008F-4783-435C-94B3-A2F42149DB80}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{417CB96E-B32B-4088-A4CF-E8322D1C6BA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.HexColor.Benchmark", "test\Benchmarks\RuQu.HexColor.Benchmark\RuQu.HexColor.Benchmark.csproj", "{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuQu.Benchmark", "test\Benchmarks\RuQu.Benchmark\RuQu.Benchmark.csproj", "{F34E1788-D09F-4325-9DD6-C3CBB749E7CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuQu.Ini", "src\Examples\RuQu.Ini\RuQu.Ini.csproj", "{F54F3868-9371-42E2-82A3-E9D959BBF486}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuQu.Ini", "src\Examples\RuQu.Ini\RuQu.Ini.csproj", "{F54F3868-9371-42E2-82A3-E9D959BBF486}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

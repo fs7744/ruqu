@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace RuQu.Benchmark
 {
+    [MemoryDiagnoser]
     public class IniTest
     {
         private const string testdata = """
