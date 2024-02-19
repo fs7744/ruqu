@@ -60,6 +60,12 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
+        public void RuQu_HexColorStruct()
+        {
+            (byte red, byte green, byte blue) = HexColorStruct.Parse("#2F14DF");
+        }
+
+        [Benchmark]
         public void Superpower_HexColor()
         {
             (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");
