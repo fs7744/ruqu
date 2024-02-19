@@ -48,6 +48,8 @@ namespace RuQu.UT
 
             var a = Ini.Parse(s);
             Assert.Equal(4, a.Count);
+            a = IniStruct.Parse(s);
+            Assert.Equal(4, a.Count);
         }
     }
 }

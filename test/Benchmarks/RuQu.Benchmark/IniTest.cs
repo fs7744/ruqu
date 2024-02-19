@@ -91,6 +91,12 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
+        public void RuQu_Struct_Ini()
+        {
+            IniStruct.Parse(testdata);
+        }
+
+        [Benchmark]
         public void IniDataParser()
         {
             parser.Parse(testdata);
