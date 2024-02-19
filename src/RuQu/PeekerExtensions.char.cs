@@ -9,35 +9,38 @@
             return peeker.Take(&char.IsWhiteSpace, out span);
         }
 
-        //private static bool IsCR(char c) => c == '\r';
-
-        //private static bool IsLF(char c) => c == '\n';
-
-        private static bool IsNotCROrLF(char c) => !(c == '\r' || c == '\n');
-
         public static bool TakeLine(this ref Peeker<char> peeker, out ReadOnlySpan<char> span)
         {
-            if (peeker.Take(&IsNotCROrLF, out span))
+            int pos = peeker.index;
+            if ((uint)pos >= (uint)peeker.Length)
             {
-                if (peeker.TryPeek(out var c))
-                {
-                    if (c == '\r')
-                    {
-                        peeker.Read(1);
-                        if (!peeker.TryPeek(out c))
-                        {
-                            return true;
-                        }
-                    }
+                span = default;
+                return false;
+            }
 
-                    if (c == '\n')
+            ReadOnlySpan<char> remaining = peeker.span.Slice(pos);
+            int foundLineLength = remaining.IndexOfAny('\r', '\n');
+            if (foundLineLength >= 0)
+            {
+                span = remaining[0..foundLineLength];
+                char ch = remaining[foundLineLength];
+                pos += foundLineLength + 1;
+                if (ch == '\r')
+                {
+                    if ((uint)pos < (uint)peeker.Length && peeker[pos] == '\n')
                     {
-                        peeker.Read(1);
+                        pos++;
                     }
                 }
+                peeker.index = pos;
+
                 return true;
             }
-            return false;
+            else
+            {
+                span = remaining;
+                return true;
+            }
         }
     }
 }

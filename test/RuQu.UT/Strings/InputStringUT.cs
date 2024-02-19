@@ -50,6 +50,8 @@ namespace RuQu.UT
             Assert.Equal(4, a.Count);
             a = IniStruct.Parse(s);
             Assert.Equal(4, a.Count);
+            a = IniStruct.Parse2(s);
+            Assert.Equal(4, a.Count);
         }
     }
 }
