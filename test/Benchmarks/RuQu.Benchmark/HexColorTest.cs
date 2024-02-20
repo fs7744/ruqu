@@ -2,25 +2,6 @@
 
 namespace RuQu.Benchmark
 {
-    public static class HexColorOnlyChar
-    {
-        private static readonly Func<IPeeker<char>, char> tag_Start = Chars.Is('#').Once("# is Required.");
-
-        private static Func<IPeeker<char>, char[]> HexDigit = Chars.IsAsciiHexDigit.Repeat(6, "Must has 6 AsciiHexDigit");
-
-        public static (byte red, byte green, byte blue) Parse(string str)
-        {
-            var input = Input.From(str);
-            tag_Start(input);
-            var s = new string(HexDigit(input));
-            var r = (Convert.ToByte(s[0..2], 16), Convert.ToByte(s[2..4], 16), Convert.ToByte(s[4..6], 16));
-            if (input.TryPeek(out var c))
-            {
-                throw new FormatException(c.ToString());
-            }
-            return r;
-        }
-    }
 
     [MemoryDiagnoser]
     public class HexColorTest
@@ -51,18 +32,6 @@ namespace RuQu.Benchmark
         public void RuQu_HexColor()
         {
             (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
-        }
-
-        [Benchmark]
-        public void RuQu_HexColorOnlyChar()
-        {
-            (byte red, byte green, byte blue) = HexColorOnlyChar.Parse("#2F14DF");
-        }
-
-        [Benchmark]
-        public void RuQu_HexColorStruct()
-        {
-            (byte red, byte green, byte blue) = HexColorStruct.Parse("#2F14DF");
         }
 
         [Benchmark]

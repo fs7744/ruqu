@@ -24,8 +24,9 @@ namespace RuQu.UT
         [InlineData(" \n9 ", 2, true)]
         public void IngoreWhiteSpaceTest(string s, int r, bool isEOF)
         {
-            var i = Input.From(s);
-            Assert.Equal(r, Chars.IngoreWhiteSpace(i));
+            var i = s.AsPeeker();
+            Assert.Equal(r > 0, i.TakeWhiteSpace(out var span));
+            Assert.Equal(r, span.Length);
             Assert.Equal(isEOF, i.TryPeek(out var c));
         }
 
@@ -47,8 +48,6 @@ namespace RuQu.UT
                 """;
 
             var a = Ini.Parse(s);
-            Assert.Equal(4, a.Count);
-            a = IniStruct.Parse(s);
             Assert.Equal(4, a.Count);
         }
     }

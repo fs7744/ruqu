@@ -1,6 +1,6 @@
 ﻿namespace RuQu
 {
-    public static unsafe partial class Charss
+    public static unsafe partial class Chars
     {
         public static Peeker<char> AsPeeker(this string str) => new(str.AsSpan());
 

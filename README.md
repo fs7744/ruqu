@@ -1,5 +1,6 @@
 # RuQu
-Parse helper lib just want to make code simple.
+
+RuQu just a parse helper lib, it want to be high performance, but the code maybe not simple.
 
 ![/doc/img/ruqu.png](https://raw.githubusercontent.com/fs7744/ruqu/main/doc/img/RuQu.png)
 
@@ -8,31 +9,40 @@ Parse helper lib just want to make code simple.
 ``` csharp
 public static class HexColor
 {
-    /// 通过字段缓存函数，避免多次构建
-    private static readonly Func<IPeeker<char>, char> TagStart = Chars.Is('#').Once("# is Required.");
-
-    private static readonly Func<IPeeker<char>, string> HexDigitString = Parser.Take<char>(6, "Must has 6 AsciiHexDigit").Map(ii =>
+    private static void TagStart(ref Peeker<char> input)
     {
-        var s = ii.ToString();
-        for (var i = 0; i < s.Length; i++)
+        if (!input.TryPeek(out var tag) || tag is not '#')
         {
-            if (!char.IsAsciiHexDigit(s[i]))
-            {
-                throw new FormatException("Must has 6 AsciiHexDigit");
-            }
+            throw new FormatException("No perfix with #");
         }
-        return s;
-    });
+        input.Read();
+    }
 
-    private static readonly Action<IPeeker<char>> NoMore = Chars.Any.NoMore("Only 7 chars");
+    private static byte HexDigitColor(ref Peeker<char> input)
+    {
+        if (!input.TryPeek(2, out var str) || !char.IsAsciiHexDigit(str[0]) || !char.IsAsciiHexDigit(str[1]))
+        {
+            throw new FormatException("One color must be 2 AsciiHexDigit");
+        }
+        input.Read(2);
+        return Convert.ToByte(str.ToString(), 16);
+    }
+
+    private static void NoMore(ref Peeker<char> input)
+    {
+        if (input.TryPeek(out var _))
+        {
+            throw new FormatException("Only 7 chars");
+        }
+    }
 
     public static (byte red, byte green, byte blue) Parse(string str)
     {
-        var input = Input.From(str);
-        TagStart(input);
-        var s = HexDigitString(input);
-        NoMore(input);
-        return (Convert.ToByte(s[0..2], 16), Convert.ToByte(s[2..4], 16), Convert.ToByte(s[4..6], 16));
+        var input = str.AsPeeker();
+        TagStart(ref input);
+        var r = (HexDigitColor(ref input), HexDigitColor(ref input), HexDigitColor(ref input));
+        NoMore(ref input);
+        return r;
     }
 }
 ```
@@ -49,6 +59,7 @@ Intel Core i7-9750H CPU 2.60GHz, 1 CPU, 12 logical and 6 physical cores
 
 
 ```
+
 | Method                | Mean      | Error    | StdDev   | Gen0   | Gen1   | Allocated |
 |---------------------- |----------:|---------:|---------:|-------:|-------:|----------:|
 | Hande_HexColor        |  59.04 ns | 0.484 ns | 0.429 ns | 0.0153 |      - |      96 B |
