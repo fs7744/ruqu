@@ -32,6 +32,30 @@
             return false;
         }
 
+        public static bool Take<T>(this ref Peeker<T> peeker, delegate*<ReadOnlySpan<T>, int> predicate, out ReadOnlySpan<T> span)
+        {
+            int pos = peeker.index;
+            if ((uint)pos >= (uint)peeker.Length)
+            {
+                span = default;
+                return false;
+            }
+
+            ReadOnlySpan<T> remaining = peeker.span[pos..];
+            int foundLineLength = predicate(remaining);
+            if (foundLineLength >= 0)
+            {
+                span = remaining[0..foundLineLength];
+                peeker.index = pos + foundLineLength + 1;
+                return true;
+            }
+            else
+            {
+                span = default;
+                return false;
+            }
+        }
+
         public static bool Take<T>(this ref Peeker<T> peeker, delegate*<T, bool> predicate, out ReadOnlySpan<T> span)
         {
             var count = 0;

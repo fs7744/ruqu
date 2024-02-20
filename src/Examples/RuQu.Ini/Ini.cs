@@ -1,5 +1,4 @@
 ﻿using RuQu.Strings;
-using System;
 
 namespace RuQu
 {
@@ -101,19 +100,11 @@ namespace RuQu
 
         private static bool IsSectionStart(char c) => c == '[';
 
-        private static bool IsSectionEnd(char c) => c == ']';
-
-        private static bool NotSectionEnd(char c) => c != ']' && c != '\r' && c != '\n';
-
-        private static bool NotSeparater(char c) => c != '=' && c != '\r' && c != '\n';
-
-        private static bool IsSeparater(char c) => c == '=';
-
         private static bool Section(ref Peeker<char> input, Dictionary<string, string> dict)
         {
             var name = SectionName(ref input);
             if (name == null) return false;
-            while (!SectionContentEnd(ref input))
+            while (input.TryPeek(out var v) && v is not '[')
             {
                 if (WhiteSpace(ref input) || Comment(ref input))
                 {
@@ -126,99 +117,45 @@ namespace RuQu
 
         public static unsafe void SectionKV(ref Peeker<char> input, Dictionary<string, string> dict, string name)
         {
-            if (!input.Take(&NotSeparater, out var k))
+            if (!input.TakeLine(out var line))
             {
                 return;
             }
 
-            if (!input.Is(&IsSeparater, out var _))
+            int separator = line.IndexOf('=');
+            if (separator < 0)
             {
-                throw new FormatException("Must be K=V");
+                throw new FormatException(line.ToString());
             }
 
-            if (!input.TakeLine(out var v))
+            var k = line[0..separator].Trim();
+            var value = line[(separator + 1)..].Trim();
+
+            // Remove quotes
+            if (value.Length > 1 && value[0] == '"' && value[^1] == '"')
             {
-                throw new FormatException("Must be K=V");
+                value = value[1..^1];
             }
-
-            dict.Add($"{name}:{k.Trim()}", (v[0] is '"' ? v[1..^1] : v).ToString());
-        }
-
-        private static bool SectionContentEnd(ref Peeker<char> input)
-        {
-            return !input.TryPeek(out var v) || v is '[';
+            dict.Add($"{name}:{k}", value.ToString());
         }
 
         private static unsafe string SectionName(ref Peeker<char> input)
         {
             if (input.Is(&IsSectionStart, out var c))
             {
-                if (!input.Take(&NotSectionEnd, out var n))
+                if (!input.TakeLine(out var l))
                 {
                     throw new FormatException("Section name is required.");
                 }
-                if (!input.Is(&IsSectionEnd, out c))
+
+                var s = l.IndexOf(']');
+                if (s <= 0)
                 {
-                    throw new FormatException("Section name must end with ']'");
+                    throw new FormatException("Section name is required.");
                 }
-                return n.ToString();
+                return l[0..s].ToString();
             }
             return null;
-        }
-
-        public static IDictionary<string, string?> Parse2(string content)
-        {
-            var data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-            var input = content.AsPeeker();
-            string sectionPrefix = string.Empty;
-
-            while (input.TakeLine(out var rawLine))
-            {
-                var line = rawLine.Trim();
-
-                // Ignore blank lines
-                
-                if (line.IsEmpty || line.IsWhiteSpace())
-                {
-                    continue;
-                }
-                // Ignore comments
-                if (line[0] is ';' or '#' or '/')
-                {
-                    continue;
-                } 
-                // [Section:header]
-                if (line[0] == '[' && line[line.Length - 1] == ']')
-                {
-                    // remove the brackets
-                    sectionPrefix = string.Concat(line[1..^1].Trim(), ":");
-                    continue;
-                }
-
-                // key = value OR "value"
-                int separator = line.IndexOf('=');
-                if (separator < 0)
-                {
-                    throw new FormatException(rawLine.ToString());
-                }
-
-                string key = sectionPrefix + line[0..separator].Trim().ToString();
-                string value = line[(separator + 1)..].Trim().ToString();
-
-                // Remove quotes
-                if (value.Length > 1 && value[0] == '"' && value[value.Length - 1] == '"')
-                {
-                    value = value.Substring(1, value.Length - 2);
-                }
-
-                if (data.ContainsKey(key))
-                {
-                    throw new FormatException(key);
-                }
-
-                data[key] = value;
-            }
-            return data;
         }
     }
 }
