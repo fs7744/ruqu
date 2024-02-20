@@ -83,7 +83,7 @@ namespace RuQu.Benchmark
         public static IDictionary<string, string?> Parse2(string content)
         {
             var data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-            var input = content.AsPeeker();
+            var input = content.AsCharPeeker();
             string sectionPrefix = string.Empty;
 
             while (input.TakeLine(out var rawLine))

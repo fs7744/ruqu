@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace RuQu.UT
 {
     public class InputStringUT
@@ -6,6 +8,11 @@ namespace RuQu.UT
         public void HexColorTest()
         {
             (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
+            Assert.Equal(47, red);
+            Assert.Equal(20, green);
+            Assert.Equal(223, blue);
+            var a = Encoding.UTF32.GetBytes("#2F14DF");
+            (red, green, blue) = HexColor.Parse(a, Encoding.UTF32);
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
@@ -24,7 +31,7 @@ namespace RuQu.UT
         [InlineData(" \n9 ", 2, true)]
         public void IngoreWhiteSpaceTest(string s, int r, bool isEOF)
         {
-            var i = s.AsPeeker();
+            var i = s.AsCharPeeker();
             Assert.Equal(r > 0, i.TakeWhiteSpace(out var span));
             Assert.Equal(r, span.Length);
             Assert.Equal(isEOF, i.TryPeek(out var c));

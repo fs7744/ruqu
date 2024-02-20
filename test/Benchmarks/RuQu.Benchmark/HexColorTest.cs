@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using System.Text;
 
 namespace RuQu.Benchmark
 {
@@ -6,6 +7,8 @@ namespace RuQu.Benchmark
     [MemoryDiagnoser]
     public class HexColorTest
     {
+        public byte[] UTF8Bytes { get; }
+
         private static (byte red, byte green, byte blue) HexColorHande(string str)
         {
             if (str.Length == 7 && str[0] is '#')
@@ -22,6 +25,11 @@ namespace RuQu.Benchmark
             throw new ArgumentException("No perfix with #");
         }
 
+        public HexColorTest()
+        {
+            UTF8Bytes = Encoding.UTF8.GetBytes("#2F14DF");
+        }
+
         [Benchmark]
         public void Hande_HexColor()
         {
@@ -32,6 +40,12 @@ namespace RuQu.Benchmark
         public void RuQu_HexColor()
         {
             (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
+        }
+
+        [Benchmark]
+        public void RuQu_HexColor_UTF8Bytes()
+        {
+            (byte red, byte green, byte blue) = HexColor.Parse(UTF8Bytes, Encoding.UTF8);
         }
 
         [Benchmark]

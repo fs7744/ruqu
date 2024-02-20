@@ -4,7 +4,7 @@
     {
         public static IDictionary<string, string> Parse(string content)
         {
-            var input = content.AsPeeker();
+            var input = content.AsCharPeeker();
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             while (input.TryPeek(out var v))
             {
@@ -21,20 +21,16 @@
             return input.TakeWhiteSpace(out var _);
         }
 
-        private static bool IsCommentStart(char c) => c == ';' || c == '#' || c == '/';
-
         private static unsafe bool Comment(ref Peeker<char> input)
         {
-            return input.Is(&IsCommentStart, out var _) && input.TakeLine(out var _);
+            return input.IsIn(";#/", out var _) && input.TakeLine(out var _);
         }
-
-        private static bool IsSectionStart(char c) => c == '[';
 
         private static bool Section(ref Peeker<char> input, Dictionary<string, string> dict)
         {
             var name = SectionName(ref input);
             if (name == null) return false;
-            while (input.TryPeek(out var v) && v is not '[')
+            while (input.IsNot('[', out var _))
             {
                 if (WhiteSpace(ref input) || Comment(ref input))
                 {
@@ -71,7 +67,7 @@
 
         private static unsafe string SectionName(ref Peeker<char> input)
         {
-            if (input.Is(&IsSectionStart, out var c))
+            if (input.Is('['))
             {
                 if (!input.TakeLine(out var l))
                 {
