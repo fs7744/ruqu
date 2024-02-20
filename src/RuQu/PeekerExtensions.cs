@@ -134,5 +134,19 @@
             span = default;
             return false;
         }
+
+        public static bool TakeRemaining<T>(this ref Peeker<T> peeker, out ReadOnlySpan<T> span)
+        {
+            int pos = peeker.index;
+            if (pos >= peeker.Length)
+            {
+                span = default;
+                return false;
+            }
+
+            span = peeker.span[pos..];
+            peeker.index = peeker.Length;
+            return true;
+        }
     }
 }

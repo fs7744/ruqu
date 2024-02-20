@@ -45,7 +45,7 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_HexColor_UTF8Bytes()
         {
-            (byte red, byte green, byte blue) = HexColor.Parse(UTF8Bytes, Encoding.UTF8);
+            (byte red, byte green, byte blue) = HexColor.ParseUTF8(UTF8Bytes);
         }
 
         [Benchmark]

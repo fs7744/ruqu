@@ -1,4 +1,6 @@
-﻿namespace RuQu
+﻿using System.Text;
+
+namespace RuQu
 {
     public static class HexColor
     {
@@ -12,7 +14,7 @@
             return Convert.ToByte(str.ToString(), 16);
         }
 
-        private static void NoMore(ref Peeker<char> input)
+        private static void NoMore<T>(ref Peeker<T> input)
         {
             if (input.TryPeek(out var _))
             {
@@ -20,8 +22,9 @@
             }
         }
 
-        public static (byte red, byte green, byte blue) Parse(ref Peeker<char> input)
+        public static (byte red, byte green, byte blue) Parse(string str)
         {
+            var input = str.AsCharPeeker();
             if (!input.Is('#'))
             {
                 throw new FormatException("No perfix with #");
@@ -31,16 +34,24 @@
             return r;
         }
 
-        public static (byte red, byte green, byte blue) Parse(string str)
-        {
-            var input = str.AsCharPeeker();
-            return Parse(ref input);
-        }
+        private static readonly byte UTF8TagStart = Encoding.UTF8.GetBytes("#")[0];
 
-        public static (byte red, byte green, byte blue) Parse(byte[] bytes, System.Text.Encoding encoding)
+        public static (byte red, byte green, byte blue) ParseUTF8(byte[] bytes)
         {
-            var input = bytes.AsCharPeeker(encoding);
-            return Parse(ref input);
+            var input = bytes.AsBytePeeker();
+            if (!input.Is(UTF8TagStart))
+            {
+                throw new FormatException("No perfix with #");
+            }
+            if (!input.TakeRemaining(out var remaining))
+            {
+                throw new FormatException("Only 7 chars");
+            }
+
+            var ci = Encoding.UTF8.GetString(remaining).AsCharPeeker();
+            var r = (HexDigitColor(ref ci), HexDigitColor(ref ci), HexDigitColor(ref ci));
+            NoMore(ref input);
+            return r;
         }
     }
 }

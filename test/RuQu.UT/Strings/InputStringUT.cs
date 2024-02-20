@@ -11,8 +11,8 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
-            var a = Encoding.UTF32.GetBytes("#2F14DF");
-            (red, green, blue) = HexColor.Parse(a, Encoding.UTF32);
+            var a = Encoding.UTF8.GetBytes("#2F14DF");
+            (red, green, blue) = HexColor.ParseUTF8(a);
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
