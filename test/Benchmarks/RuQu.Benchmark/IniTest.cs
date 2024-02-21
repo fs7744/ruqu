@@ -26,7 +26,7 @@ namespace RuQu.Benchmark
             var data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
             using (var reader = new StringReader(content))
             {
-                string sectionPrefix = string.Empty;
+                string sectionPix = string.Empty;
 
                 while (reader.Peek() != -1)
                 {
@@ -47,7 +47,7 @@ namespace RuQu.Benchmark
                     if (line[0] == '[' && line[line.Length - 1] == ']')
                     {
                         // remove the brackets
-                        sectionPrefix = string.Concat(line.AsSpan(1, line.Length - 2).Trim(), ConfigurationPath.KeyDelimiter);
+                        sectionPix = string.Concat(line.AsSpan(1, line.Length - 2).Trim(), ConfigurationPath.KeyDelimiter);
                         continue;
                     }
 
@@ -58,7 +58,7 @@ namespace RuQu.Benchmark
                         throw new FormatException(rawLine);
                     }
 
-                    string key = sectionPrefix + line.Substring(0, separator).Trim();
+                    string key = sectionPix + line.Substring(0, separator).Trim();
                     string value = line.Substring(separator + 1).Trim();
 
                     // Remove quotes
@@ -84,7 +84,7 @@ namespace RuQu.Benchmark
         {
             var data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
             var input = content.AsCharPeeker();
-            string sectionPrefix = string.Empty;
+            string sectionPix = string.Empty;
 
             while (input.TakeLine(out var rawLine))
             {
@@ -105,7 +105,7 @@ namespace RuQu.Benchmark
                 if (line[0] == '[' && line[line.Length - 1] == ']')
                 {
                     // remove the brackets
-                    sectionPrefix = string.Concat(line[1..^1].Trim(), ":");
+                    sectionPix = string.Concat(line[1..^1].Trim(), ":");
                     continue;
                 }
 
@@ -116,7 +116,7 @@ namespace RuQu.Benchmark
                     throw new FormatException(rawLine.ToString());
                 }
 
-                string key = sectionPrefix + line[0..separator].Trim().ToString();
+                string key = sectionPix + line[0..separator].Trim().ToString();
                 string value = line[(separator + 1)..].Trim().ToString();
 
                 // Remove quotes

@@ -4,7 +4,7 @@ namespace RuQu
 {
     public static class HexColor
     {
-        private static byte HexDigitColor(ref Peeker<char> input)
+        private static byte HexDigitColor(IPeeker<char> input)
         {
             if (!input.TryPeek(2, out var str) || !char.IsAsciiHexDigit(str[0]) || !char.IsAsciiHexDigit(str[1]))
             {
@@ -14,7 +14,7 @@ namespace RuQu
             return Convert.ToByte(str.ToString(), 16);
         }
 
-        private static void NoMore<T>(ref Peeker<T> input)
+        private static void NoMore<T>(IPeeker<T> input)
         {
             if (input.TryPeek(out var _))
             {
@@ -29,8 +29,8 @@ namespace RuQu
             {
                 throw new FormatException("No perfix with #");
             }
-            var r = (HexDigitColor(ref input), HexDigitColor(ref input), HexDigitColor(ref input));
-            NoMore(ref input);
+            var r = (HexDigitColor(input), HexDigitColor(input), HexDigitColor(input));
+            NoMore(input);
             return r;
         }
 
@@ -49,8 +49,8 @@ namespace RuQu
             }
 
             var ci = Encoding.UTF8.GetString(remaining).AsCharPeeker();
-            var r = (HexDigitColor(ref ci), HexDigitColor(ref ci), HexDigitColor(ref ci));
-            NoMore(ref input);
+            var r = (HexDigitColor(ci), HexDigitColor(ci), HexDigitColor(ci));
+            NoMore(input);
             return r;
         }
     }

@@ -8,7 +8,7 @@
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             while (input.TryPeek(out var v))
             {
-                if (!(WhiteSpace(ref input) || Comment(ref input) || Section(ref input, dict)))
+                if (!(WhiteSpace(input) || Comment(input) || Section(input, dict)))
                 {
                     throw new NotSupportedException(v.ToString());
                 }
@@ -16,32 +16,32 @@
             return dict;
         }
 
-        private static bool WhiteSpace(ref Peeker<char> input)
+        private static bool WhiteSpace(StringPeeker input)
         {
             return input.TakeWhiteSpace(out var _);
         }
 
-        private static unsafe bool Comment(ref Peeker<char> input)
+        private static unsafe bool Comment(StringPeeker input)
         {
             return input.IsIn(";#/", out var _) && input.TakeLine(out var _);
         }
 
-        private static bool Section(ref Peeker<char> input, Dictionary<string, string> dict)
+        private static bool Section(StringPeeker input, Dictionary<string, string> dict)
         {
-            var name = SectionName(ref input);
+            var name = SectionName(input);
             if (name == null) return false;
             while (input.IsNot('[', out var _))
             {
-                if (WhiteSpace(ref input) || Comment(ref input))
+                if (WhiteSpace(input) || Comment(input))
                 {
                     continue;
                 }
-                SectionKV(ref input, dict, name);
+                SectionKV(input, dict, name);
             }
             return true;
         }
 
-        public static unsafe void SectionKV(ref Peeker<char> input, Dictionary<string, string> dict, string name)
+        public static unsafe void SectionKV(StringPeeker input, Dictionary<string, string> dict, string name)
         {
             if (!input.TakeLine(out var line))
             {
@@ -65,7 +65,7 @@
             dict.Add($"{name}:{k}", value.ToString());
         }
 
-        private static unsafe string SectionName(ref Peeker<char> input)
+        private static unsafe string SectionName(StringPeeker input)
         {
             if (input.Is('['))
             {

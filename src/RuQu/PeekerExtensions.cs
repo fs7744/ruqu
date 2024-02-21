@@ -2,7 +2,23 @@
 {
     public static unsafe partial class PeekerExtensions
     {
-        public static bool Is<T>(this ref Peeker<T> peeker, T t) where T : IEquatable<T>?
+
+        public static bool TryPeek<T>(this IPeeker<T> peeker, out T data)
+        {
+            return peeker.TryPeekOffset(0, out data);
+        }
+
+        public static bool TryPeek<T>(this IPeeker<T> peeker, int count, out ReadOnlySpan<T> data)
+        {
+            return peeker.TryPeekOffset(0, count, out data);
+        }
+
+        public static void Read<T>(this IPeeker<T> peeker)
+        {
+            peeker.Read(1);
+        }
+
+        public static bool Is<T>(this IPeeker<T> peeker, T t) where T : IEquatable<T>?
         {
             if (peeker.TryPeek(out var c) && c.Equals(t))
             {
@@ -12,7 +28,7 @@
             return false;
         }
 
-        public static bool IsNot<T>(this ref Peeker<T> peeker, T t, out T c) where T : IEquatable<T>?
+        public static bool IsNot<T>(this IPeeker<T> peeker, T t, out T c) where T : IEquatable<T>?
         {
             if (peeker.TryPeek(out c) && !c.Equals(t))
             {
@@ -21,7 +37,7 @@
             return false;
         }
 
-        public static bool IsIn<T>(this ref Peeker<T> peeker, ReadOnlySpan<T> t, out T c) where T : IEquatable<T>?
+        public static bool IsIn<T>(this IPeeker<T> peeker, ReadOnlySpan<T> t, out T c) where T : IEquatable<T>?
         {
             if (peeker.TryPeek(out c) && t.Contains(c))
             {
@@ -31,7 +47,7 @@
             return false;
         }
 
-        public static bool Is<T>(this ref Peeker<T> peeker, Func<T, bool> predicate, out T c)
+        public static bool Is<T>(this IPeeker<T> peeker, Func<T, bool> predicate, out T c)
         {
             if (peeker.TryPeek(out c) && predicate(c))
             {
@@ -41,7 +57,7 @@
             return false;
         }
 
-        public static bool Is<T>(this ref Peeker<T> peeker, delegate*<T, bool> predicate, out T c)
+        public static bool Is<T>(this IPeeker<T> peeker, delegate*<T, bool> predicate, out T c)
         {
             if (peeker.TryPeek(out c) && predicate(c))
             {
@@ -51,7 +67,7 @@
             return false;
         }
 
-        public static bool IsAny<T>(ref Peeker<T> peeker, out T c)
+        public static bool IsAny<T>(IPeeker<T> peeker, out T c)
         {
             if (peeker.TryPeek(out c))
             {
@@ -61,47 +77,7 @@
             return false;
         }
 
-        public static bool StartsWith<T>(this ref Peeker<T> peeker, ReadOnlySpan<T> value) where T : IEquatable<T>?
-        {
-            int pos = peeker.index;
-            if (pos >= peeker.Length || pos + value.Length >= peeker.Length)
-            {
-                return false;
-            }
-            ReadOnlySpan<T> remaining = peeker.span[pos..];
-            if (remaining.StartsWith(value))
-            {
-                peeker.Read(value.Length);
-                return true;
-            }
-            return false;
-        }
-
-        public static bool Take<T>(this ref Peeker<T> peeker, delegate*<ReadOnlySpan<T>, int> predicate, out ReadOnlySpan<T> span)
-        {
-            int pos = peeker.index;
-            if ((uint)pos >= (uint)peeker.Length)
-            {
-                span = default;
-                return false;
-            }
-
-            ReadOnlySpan<T> remaining = peeker.span[pos..];
-            int foundLineLength = predicate(remaining);
-            if (foundLineLength >= 0)
-            {
-                span = remaining[0..foundLineLength];
-                peeker.index = pos + foundLineLength + 1;
-                return true;
-            }
-            else
-            {
-                span = default;
-                return false;
-            }
-        }
-
-        public static bool Take<T>(this ref Peeker<T> peeker, delegate*<T, bool> predicate, out ReadOnlySpan<T> span)
+        public static bool Take<T>(this IPeeker<T> peeker, delegate*<T, bool> predicate, out ReadOnlySpan<T> span)
         {
             var count = 0;
             while (peeker.TryPeekOffset(count, out var t) && predicate(t))
@@ -118,7 +94,7 @@
             return false;
         }
 
-        public static bool Take<T>(this ref Peeker<T> peeker, Func<T, bool> predicate, out ReadOnlySpan<T> span)
+        public static bool Take<T>(this IPeeker<T> peeker, Func<T, bool> predicate, out ReadOnlySpan<T> span)
         {
             var count = 0;
             while (peeker.TryPeekOffset(count, out var t) && predicate(t))
@@ -133,20 +109,6 @@
             }
             span = default;
             return false;
-        }
-
-        public static bool TakeRemaining<T>(this ref Peeker<T> peeker, out ReadOnlySpan<T> span)
-        {
-            int pos = peeker.index;
-            if (pos >= peeker.Length)
-            {
-                span = default;
-                return false;
-            }
-
-            span = peeker.span[pos..];
-            peeker.index = peeker.Length;
-            return true;
         }
     }
 }
