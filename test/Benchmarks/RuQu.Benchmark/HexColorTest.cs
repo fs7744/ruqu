@@ -55,6 +55,12 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
+        public void Pidgin_HexColor()
+        {
+            (byte red, byte green, byte blue) = PidginHexColorTest.Parse("#2F14DF");
+        }
+
+        [Benchmark]
         public void Sprache_HexColor()
         {
             (byte red, byte green, byte blue) = SpracheHexColorTest.Parse("#2F14DF");
