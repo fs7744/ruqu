@@ -38,9 +38,17 @@ namespace RuQu
 
         private static readonly HexColorStreamParser instance = new HexColorStreamParser();
 
+
         public static (byte red, byte green, byte blue) ParseStream(Stream stream)
         {
             return instance.Read(stream, new CodeTemplate.SimpleReadOptions() { BufferSize = 8 });
+        }
+
+        private static readonly HexColorCharParser _instance = new HexColorCharParser();
+
+        public static (byte red, byte green, byte blue) Parse2(string str)
+        {
+            return _instance.Read(str, new CodeTemplate.SimpleReadOptions() { BufferSize = 8 });
         }
 
         public static (byte red, byte green, byte blue) ParseUTF8(byte[] bytes)
