@@ -16,6 +16,10 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
+            (red, green, blue) = HexColor.ParseStream(new MemoryStream(a));
+            Assert.Equal(47, red);
+            Assert.Equal(20, green);
+            Assert.Equal(223, blue);
         }
 
         [Theory]

@@ -49,6 +49,12 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
+        public void RuQu_HexColor_Stream()
+        {
+            (byte red, byte green, byte blue) = HexColor.ParseStream(new MemoryStream(UTF8Bytes));
+        }
+
+        [Benchmark]
         public void Superpower_HexColor()
         {
             (byte red, byte green, byte blue) = SuperpowerHexColorTest.Parse("#2F14DF");

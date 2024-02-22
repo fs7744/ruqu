@@ -36,6 +36,13 @@ namespace RuQu
 
         private static readonly byte UTF8TagStart = Encoding.UTF8.GetBytes("#")[0];
 
+        private static readonly HexColorStreamParser instance = new HexColorStreamParser();
+
+        public static (byte red, byte green, byte blue) ParseStream(Stream stream)
+        {
+            return instance.Read(stream, new CodeTemplate.SimpleReadOptions() { BufferSize = 8 });
+        }
+
         public static (byte red, byte green, byte blue) ParseUTF8(byte[] bytes)
         {
             var input = bytes.AsBytePeeker();
