@@ -1,4 +1,5 @@
 ﻿using RuQu.Reader;
+using System.Reflection.PortableExecutable;
 
 namespace RuQu.CodeTemplate
 {
@@ -21,11 +22,11 @@ namespace RuQu.CodeTemplate
     {
         public async ValueTask<T?> ReadAsync(Stream stream, Options options, CancellationToken cancellationToken = default)
         {
-            var bufferState = new ReadBuffer(options.BufferSize);
+            var bufferState = new ByteReadBuffer(stream, options.BufferSize);
             State state = new();
             try
             {
-                bufferState = await bufferState.ReadFromStreamAsync(stream, cancellationToken).ConfigureAwait(false);
+                bufferState = (ByteReadBuffer)await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
                 HandleFirstBlock(ref bufferState);
                 do
                 {
@@ -35,7 +36,7 @@ namespace RuQu.CodeTemplate
                     {
                         return value;
                     }
-                    bufferState = await bufferState.ReadFromStreamAsync(stream, cancellationToken).ConfigureAwait(false);
+                    bufferState = (ByteReadBuffer)await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
                 } while (true);
             }
             finally
@@ -46,11 +47,11 @@ namespace RuQu.CodeTemplate
 
         public T? Read(Stream stream, Options options)
         {
-            var bufferState = new ReadBuffer(options.BufferSize);
+            var bufferState = new ByteReadBuffer(stream, options.BufferSize);
             State state = new();
             try
             {
-                bufferState.ReadFromStream(stream);
+                bufferState.ReadNextBuffer();
                 HandleFirstBlock(ref bufferState);
                 do
                 {
@@ -60,7 +61,7 @@ namespace RuQu.CodeTemplate
                     {
                         return value;
                     }
-                    bufferState.ReadFromStream(stream);
+                    bufferState.ReadNextBuffer();
                 } while (true);
             }
             finally
@@ -69,9 +70,9 @@ namespace RuQu.CodeTemplate
             }
         }
 
-        protected abstract T? ContinueRead(ref ReadBuffer bufferState, ref State state);
+        protected abstract T? ContinueRead(ref ByteReadBuffer bufferState, ref State state);
 
-        protected virtual void HandleFirstBlock(ref ReadBuffer bufferState)
+        protected virtual void HandleFirstBlock(ref ByteReadBuffer bufferState)
         {
         }
     }

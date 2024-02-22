@@ -1,3 +1,4 @@
+using RuQu.CodeTemplate;
 using System.Text;
 
 namespace RuQu.UT
@@ -59,6 +60,8 @@ namespace RuQu.UT
                 """;
 
             var a = Ini.Parse(s);
+            Assert.Equal(4, a.Count);
+            a = IniParser.Instance.Read(s, new SimpleReadOptions());
             Assert.Equal(4, a.Count);
         }
     }

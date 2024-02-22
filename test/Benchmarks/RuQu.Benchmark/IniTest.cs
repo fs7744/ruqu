@@ -19,7 +19,7 @@ namespace RuQu.Benchmark
 
                 """;
 
-        IniDataParser parser = new IniParser.Parser.IniDataParser();
+        IniDataParser parser = new IniDataParser();
 
         public static IDictionary<string, string?> Read(string content)
         {
@@ -151,6 +151,12 @@ namespace RuQu.Benchmark
         public void RuQu_Struct_Ini2()
         {
             Parse2(testdata);
+        }
+
+        [Benchmark]
+        public void RuQu_Stream()
+        {
+            IniParser.Instance.Read(testdata, new CodeTemplate.SimpleReadOptions());
         }
 
         [Benchmark]

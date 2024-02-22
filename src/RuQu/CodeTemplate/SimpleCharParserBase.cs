@@ -1,4 +1,6 @@
 ﻿using RuQu.Reader;
+using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 
 namespace RuQu.CodeTemplate
 {
@@ -6,13 +8,13 @@ namespace RuQu.CodeTemplate
     {
         public async ValueTask<T?> ReadAsync(TextReader reader, Options options, CancellationToken cancellationToken = default)
         {
-            var bufferState = new ReadCharBuffer(options.BufferSize);
+            IReadBuffer<char> bufferState = new CharReadBuffer(reader, options.BufferSize);
             State state = new();
             try
             {
                 while (true)
                 {
-                    bufferState = await bufferState.ReadFromStreamAsync(reader, cancellationToken).ConfigureAwait(false);
+                    bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
                     T? value = ContinueRead(ref bufferState, ref state);
 
                     if (bufferState.IsFinalBlock)
@@ -39,7 +41,9 @@ namespace RuQu.CodeTemplate
 
         public ValueTask<T?> ReadAsync(string content, Options options, CancellationToken cancellationToken = default)
         {
-            return ReadAsync(new StringReader(content), options, cancellationToken);
+            IReadBuffer<char> bufferState = new StringReadBuffer(content);
+            State state = new();
+            return ValueTask.FromResult(ContinueRead(ref bufferState, ref state));
         }
 
         public T? Read(Stream stream, Options options)
@@ -54,18 +58,20 @@ namespace RuQu.CodeTemplate
 
         public T? Read(string content, Options options)
         {
-            return Read(new StringReader(content), options);
+            IReadBuffer<char> bufferState = new StringReadBuffer(content);
+            State state = new();
+            return ContinueRead(ref bufferState, ref state);
         }
 
         public T? Read(TextReader reader, Options options)
         {
-            var bufferState = new ReadCharBuffer(options.BufferSize);
+            IReadBuffer<char> bufferState = new CharReadBuffer(reader, options.BufferSize);
             State state = new();
             try
             {
                 while (true)
                 {
-                    bufferState.ReadFromStream(reader);
+                    bufferState.ReadNextBuffer();
                     T? value = ContinueRead(ref bufferState, ref state);
 
                     if (bufferState.IsFinalBlock)
@@ -80,6 +86,6 @@ namespace RuQu.CodeTemplate
             }
         }
 
-        protected abstract T? ContinueRead(ref ReadCharBuffer bufferState, ref State state);
+        protected abstract T? ContinueRead(ref IReadBuffer<char> bufferState, ref State state);
     }
 }

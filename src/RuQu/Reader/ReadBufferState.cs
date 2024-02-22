@@ -1,78 +1,45 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
+    public interface IReadBuffer<T> : IDisposable
+    {
+        public ReadOnlySpan<T> Remaining { get; }
+        public bool IsFinalBlock { get; }
+
+        public void Offset(int count);
+
+        public void AdvanceBuffer(int bytesConsumed);
+
+        public void ReadNextBuffer();
+
+        public ValueTask<IReadBuffer<T>> ReadNextBufferAsync(CancellationToken cancellationToken);
+    }
+
+
     [StructLayout(LayoutKind.Auto)]
-    public struct ReadBuffer : IDisposable
+    public struct ByteReadBuffer : IReadBuffer<byte>
     {
         internal byte[] _buffer;
-        internal byte _offset;
+        internal int _offset;
         internal int _count;
         internal int _maxCount;
         private bool _isFinalBlock;
+        private Stream _stream;
 
-        public ReadBuffer(int initialBufferSize)
+        public readonly ReadOnlySpan<byte> Remaining => _buffer.AsSpan(_offset, _count - _offset);
+
+        public readonly bool IsFinalBlock => _isFinalBlock;
+
+        public ByteReadBuffer(Stream stream ,int initialBufferSize)
         {
             _buffer = ArrayPool<byte>.Shared.Rent(initialBufferSize);
             _maxCount = _count = _offset = 0;
             _isFinalBlock = false;
-        }
-
-        public readonly bool IsFinalBlock => _isFinalBlock;
-
-        public readonly ReadOnlySpan<byte> Bytes => _buffer.AsSpan(_offset, _count);
-
-        public async ValueTask<ReadBuffer> ReadFromStreamAsync(
-            Stream stream,
-            CancellationToken cancellationToken,
-            bool fillBuffer = true)
-        {
-            // Since mutable structs don't work well with async state machines,
-            // make all updates on a copy which is returned once complete.
-            ReadBuffer bufferState = this;
-
-            do
-            {
-                int bytesRead = await stream.ReadAsync(bufferState._buffer.AsMemory(bufferState._count), cancellationToken).ConfigureAwait(false);
-
-                if (bytesRead == 0)
-                {
-                    bufferState._isFinalBlock = true;
-                    break;
-                }
-
-                bufferState._count += bytesRead;
-            }
-            while (fillBuffer && bufferState._count < bufferState._buffer.Length);
-
-            if (_count > _maxCount)
-            {
-                _maxCount = _count;
-            }
-            return bufferState;
-        }
-
-        public void ReadFromStream(Stream stream)
-        {
-            do
-            {
-                int bytesRead = stream.Read(_buffer.AsSpan(_count));
-                if (bytesRead == 0)
-                {
-                    _isFinalBlock = true;
-                    break;
-                }
-
-                _count += bytesRead;
-            }
-            while (_count < _buffer.Length);
-
-            if (_count > _maxCount)
-            {
-                _maxCount = _count;
-            }
+            _stream = stream;
         }
 
         public void AdvanceBuffer(int bytesConsumed)
@@ -120,64 +87,19 @@ namespace RuQu.Reader
             _buffer = null!;
 
             ArrayPool<byte>.Shared.Return(toReturn);
+            _stream= null!;
         }
-    }
 
-    [StructLayout(LayoutKind.Auto)]
-    public struct ReadCharBuffer : IDisposable
-    {
-        internal char[] _buffer;
-        internal byte _offset;
-        internal int _count;
-        internal int _maxCount;
-        private bool _isFinalBlock;
-
-        public ReadCharBuffer(int initialBufferSize)
+        public void Offset(int count)
         {
-            _buffer = ArrayPool<char>.Shared.Rent(initialBufferSize);
-            _maxCount = _count = _offset = 0;
-            _isFinalBlock = false;
+            _offset = Math.Min(count + _offset, _count);
         }
 
-        public readonly bool IsFinalBlock => _isFinalBlock;
-
-        public readonly ReadOnlySpan<char> Chars => _buffer.AsSpan(_offset, _count);
-
-        public async ValueTask<ReadCharBuffer> ReadFromStreamAsync(
-            TextReader reader,
-            CancellationToken cancellationToken,
-            bool fillBuffer = true)
-        {
-            // Since mutable structs don't work well with async state machines,
-            // make all updates on a copy which is returned once complete.
-            ReadCharBuffer bufferState = this;
-
-            do
-            {
-                int bytesRead = await reader.ReadAsync(bufferState._buffer.AsMemory(bufferState._count), cancellationToken).ConfigureAwait(false);
-
-                if (bytesRead == 0)
-                {
-                    bufferState._isFinalBlock = true;
-                    break;
-                }
-
-                bufferState._count += bytesRead;
-            }
-            while (fillBuffer && bufferState._count < bufferState._buffer.Length);
-
-            if (_count > _maxCount)
-            {
-                _maxCount = _count;
-            }
-            return bufferState;
-        }
-
-        public void ReadFromStream(TextReader reader)
+        public void ReadNextBuffer()
         {
             do
             {
-                int bytesRead = reader.Read(_buffer.AsSpan(_count));
+                int bytesRead = _stream.Read(_buffer.AsSpan(_count));
                 if (bytesRead == 0)
                 {
                     _isFinalBlock = true;
@@ -192,6 +114,56 @@ namespace RuQu.Reader
             {
                 _maxCount = _count;
             }
+        }
+
+        public async ValueTask<IReadBuffer<byte>> ReadNextBufferAsync(CancellationToken cancellationToken)
+        {
+            // Since mutable structs don't work well with async state machines,
+            // make all updates on a copy which is returned once complete.
+            ByteReadBuffer bufferState = this;
+
+            do
+            {
+                int bytesRead = await _stream.ReadAsync(bufferState._buffer.AsMemory(bufferState._count), cancellationToken).ConfigureAwait(false);
+
+                if (bytesRead == 0)
+                {
+                    bufferState._isFinalBlock = true;
+                    break;
+                }
+
+                bufferState._count += bytesRead;
+            }
+            while (bufferState._count < bufferState._buffer.Length);
+
+            if (_count > _maxCount)
+            {
+                _maxCount = _count;
+            }
+            return bufferState;
+        }
+    }
+
+    [StructLayout(LayoutKind.Auto)]
+    public class CharReadBuffer : IReadBuffer<char>
+    {
+        internal char[] _buffer;
+        internal int _offset;
+        internal int _count;
+        internal int _maxCount;
+        private bool _isFinalBlock;
+        private TextReader _stream;
+
+        public ReadOnlySpan<char> Remaining => _buffer.AsSpan(_offset, _count - _offset);
+
+        public bool IsFinalBlock => _isFinalBlock;
+
+        public CharReadBuffer(TextReader stream, int initialBufferSize)
+        {
+            _buffer = ArrayPool<char>.Shared.Rent(initialBufferSize);
+            _maxCount = _count = _offset = 0;
+            _isFinalBlock = false;
+            _stream = stream;
         }
 
         public void AdvanceBuffer(int bytesConsumed)
@@ -239,22 +211,142 @@ namespace RuQu.Reader
             _buffer = null!;
 
             ArrayPool<char>.Shared.Return(toReturn);
+            _stream = null!;
+        }
+
+        public void Offset(int count)
+        {
+            _offset = Math.Min(count + _offset, _count);
+        }
+
+        public void ReadNextBuffer()
+        {
+            do
+            {
+                int bytesRead = _stream.Read(_buffer.AsSpan(_count));
+                if (bytesRead == 0)
+                {
+                    _isFinalBlock = true;
+                    break;
+                }
+
+                _count += bytesRead;
+            }
+            while (_count < _buffer.Length);
+
+            if (_count > _maxCount)
+            {
+                _maxCount = _count;
+            }
+        }
+
+        public async ValueTask<IReadBuffer<char>> ReadNextBufferAsync(CancellationToken cancellationToken)
+        {
+            // Since mutable structs don't work well with async state machines,
+            // make all updates on a copy which is returned once complete.
+            CharReadBuffer bufferState = this;
+
+            do
+            {
+                int bytesRead = await _stream.ReadAsync(bufferState._buffer.AsMemory(bufferState._count), cancellationToken).ConfigureAwait(false);
+
+                if (bytesRead == 0)
+                {
+                    bufferState._isFinalBlock = true;
+                    break;
+                }
+
+                bufferState._count += bytesRead;
+            }
+            while (bufferState._count < bufferState._buffer.Length);
+
+            if (_count > _maxCount)
+            {
+                _maxCount = _count;
+            }
+            return bufferState;
         }
     }
+
+    [StructLayout(LayoutKind.Auto)]
+    public class StringReadBuffer : IReadBuffer<char>
+    {
+        internal string _buffer;
+        internal int _offset;
+
+        public StringReadBuffer(string str)
+        {
+            _buffer = str;
+        }
+
+        public ReadOnlySpan<char> Remaining => _buffer.AsSpan(_offset, _buffer.Length - _offset);
+
+        public bool IsFinalBlock => true;
+
+        public void AdvanceBuffer(int bytesConsumed)
+        {
+        }
+
+        public void Dispose()
+        {
+            _buffer = null!;
+        }
+
+        public void Offset(int count)
+        {
+            _offset = Math.Min(count + _offset, _buffer.Length);
+        }
+
+        public void ReadNextBuffer()
+        {
+        }
+
+        public ValueTask<IReadBuffer<char>> ReadNextBufferAsync(CancellationToken cancellationToken)
+        {
+            return ValueTask.FromResult(this as IReadBuffer<char>);
+        }
+    }
+
 
     public static class ReadBufferStateExtensions
     {
         public static ReadOnlySpan<byte> Utf8Bom => [0xEF, 0xBB, 0xBF];
 
-        public static void IngoreUtf8Bom(this ref ReadBuffer buffer)
+        public static void IngoreUtf8Bom(this ref ByteReadBuffer buffer)
         {
+            var remaining = buffer.Remaining;
             // Handle the UTF-8 BOM if present
-            Debug.Assert(buffer._buffer.Length >= Utf8Bom.Length);
-            if (buffer._buffer.AsSpan(0, buffer._count).StartsWith(Utf8Bom))
+            Debug.Assert(remaining.Length >= Utf8Bom.Length);
+            if (remaining.StartsWith(Utf8Bom))
             {
-                buffer._offset = (byte)Utf8Bom.Length;
-                buffer._count -= Utf8Bom.Length;
+                buffer.Offset(Utf8Bom.Length);
             }
+        }
+
+        public static int ReadLine(this IReadBuffer<char> buffer, out ReadOnlySpan<char> span)
+        {
+            ReadOnlySpan<char> remaining = buffer.Remaining;
+            if(!remaining.IsEmpty) 
+            {
+                int foundLineLength = remaining.IndexOfAny('\r', '\n');
+                if (foundLineLength >= 0)
+                {
+                    span = remaining[0..foundLineLength];
+                    char ch = remaining[foundLineLength];
+                    var pos = foundLineLength + 1;
+                    if (ch == '\r')
+                    {
+                        if ((uint)pos < (uint)remaining.Length && remaining[pos] == '\n')
+                        {
+                            pos++;
+                        }
+                    }
+                    buffer.Offset(pos);
+                    return pos;
+                }
+            }
+            span = default;
+            return 0;
         }
     }
 }
