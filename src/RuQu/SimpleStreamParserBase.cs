@@ -1,7 +1,7 @@
 ﻿using RuQu.Reader;
 using System.Reflection.PortableExecutable;
 
-namespace RuQu.CodeTemplate
+namespace RuQu
 {
     public interface IReadOptions
     {

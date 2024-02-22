@@ -2,7 +2,7 @@
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 
-namespace RuQu.CodeTemplate
+namespace RuQu
 {
     public abstract class SimpleCharParserBase<T, Options, State> where State : new() where Options : IReadOptions
     {

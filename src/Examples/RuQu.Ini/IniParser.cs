@@ -1,14 +1,7 @@
-﻿using RuQu.CodeTemplate;
-using RuQu.Reader;
+﻿using RuQu.Reader;
 
 namespace RuQu
 {
-    public class IniParserState
-    {
-        public IDictionary<string, string> Dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        public string SectionPix;
-    }
-
     public class IniParser : SimpleCharParserBase<IDictionary<string, string>, SimpleReadOptions, IniParserState>
     {
         public static readonly IniParser Instance = new IniParser();
@@ -21,7 +14,7 @@ namespace RuQu
             {
                 count = bufferState.ReadLine(out var rawLine);
                 total += count;
-                if (count == 0 && bufferState.IsFinalBlock )
+                if (count == 0 && bufferState.IsFinalBlock)
                 {
                     rawLine = bufferState.Remaining;
                     total += rawLine.Length;
@@ -72,6 +65,5 @@ namespace RuQu
             } while (count > 0);
             return bufferState.IsFinalBlock ? state.Dict : null;
         }
-
     }
 }

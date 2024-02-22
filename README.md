@@ -7,42 +7,35 @@ RuQu just a parse helper lib, it want to be high performance, but the code maybe
 ## HexColor String Parse Example
 
 ``` csharp
-public static class HexColor
+public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleReadOptions, IntState>
 {
-    private static void TagStart(ref Peeker<char> input)
+    protected override (byte red, byte green, byte blue) ContinueRead(ref IReadBuffer<char> bufferState, ref IntState state)
     {
-        if (!input.TryPeek(out var tag) || tag is not '#')
+        var bytes = bufferState.Remaining;
+        if (bytes.Length > 7)
+        {
+            throw new FormatException("Only 7 utf-8 chars");
+        }
+
+        if (!bufferState.IsFinalBlock && bytes.Length < 7)
+        {
+            bufferState.AdvanceBuffer(0);
+            return default;
+        }
+
+        if (bufferState.IsFinalBlock && bytes.Length < 7)
+        {
+            throw new FormatException("Must 7 utf-8 chars");
+        }
+
+        if (bytes[0] is not '#')
         {
             throw new FormatException("No perfix with #");
         }
-        input.Read();
-    }
 
-    private static byte HexDigitColor(ref Peeker<char> input)
-    {
-        if (!input.TryPeek(2, out var str) || !char.IsAsciiHexDigit(str[0]) || !char.IsAsciiHexDigit(str[1]))
-        {
-            throw new FormatException("One color must be 2 AsciiHexDigit");
-        }
-        input.Read(2);
-        return Convert.ToByte(str.ToString(), 16);
-    }
+        var c = new string(bytes[1..]);
 
-    private static void NoMore(ref Peeker<char> input)
-    {
-        if (input.TryPeek(out var _))
-        {
-            throw new FormatException("Only 7 chars");
-        }
-    }
-
-    public static (byte red, byte green, byte blue) Parse(string str)
-    {
-        var input = str.AsPeeker();
-        TagStart(ref input);
-        var r = (HexDigitColor(ref input), HexDigitColor(ref input), HexDigitColor(ref input));
-        NoMore(ref input);
-        return r;
+        return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
     }
 }
 ```
@@ -51,18 +44,19 @@ public static class HexColor
 
 ```
 
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.22000.2538/21H2/SunValley)
-Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3155/23H2/2023Update/SunValley3)
+13th Gen Intel Core i9-13900KF, 1 CPU, 32 logical and 24 physical cores
 .NET SDK 8.0.200
   [Host]     : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
   DefaultJob : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
 
 
 ```
-
-| Method              | Mean      | Error     | StdDev    | Gen0   | Gen1   | Allocated |
-|-------------------- |----------:|----------:|----------:|-------:|-------:|----------:|
-| Hande_HexColor      |  45.93 ns |  0.599 ns |  0.531 ns | 0.0114 |      - |      96 B |
-| RuQu_HexColor       |  58.98 ns |  0.564 ns |  0.500 ns | 0.0114 |      - |      96 B |
-| Superpower_HexColor | 453.29 ns |  7.207 ns |  6.741 ns | 0.0954 |      - |     800 B |
-| Sprache_HexColor    | 615.32 ns | 11.622 ns | 10.871 ns | 0.3519 | 0.0010 |    2944 B |
+| Method               | Mean      | Error    | StdDev   | Gen0   | Gen1   | Allocated |
+|--------------------- |----------:|---------:|---------:|-------:|-------:|----------:|
+| Hande_HexColor       |  25.60 ns | 0.257 ns | 0.240 ns | 0.0051 |      - |      96 B |
+| RuQu_HexColor        |  31.05 ns | 0.413 ns | 0.386 ns | 0.0102 |      - |     192 B |
+| RuQu_HexColor_Stream |  59.26 ns | 1.167 ns | 1.297 ns | 0.0118 |      - |     224 B |
+| Superpower_HexColor  | 323.70 ns | 5.129 ns | 4.797 ns | 0.0424 |      - |     800 B |
+| Pidgin_HexColor      | 137.06 ns | 1.035 ns | 0.968 ns | 0.0186 |      - |     352 B |
+| Sprache_HexColor     | 312.23 ns | 2.697 ns | 2.523 ns | 0.1564 | 0.0005 |    2944 B |
