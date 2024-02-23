@@ -1,11 +1,9 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
-    [StructLayout(LayoutKind.Auto)]
-    public struct ByteReadBuffer : IReadBuffer<byte>
+    public class ByteReadBuffer : IReadBuffer<byte>
     {
         internal byte[] _buffer;
         internal int _offset;
@@ -14,11 +12,11 @@ namespace RuQu.Reader
         private bool _isFinalBlock;
         private Stream _stream;
 
-        public readonly ReadOnlySpan<byte> Remaining => _buffer.AsSpan(_offset, _count - _offset);
+        public ReadOnlySpan<byte> Remaining => _buffer.AsSpan(_offset, _count - _offset);
 
-        public readonly bool IsFinalBlock => _isFinalBlock;
+        public bool IsFinalBlock => _isFinalBlock;
 
-        public ByteReadBuffer(Stream stream ,int initialBufferSize)
+        public ByteReadBuffer(Stream stream, int initialBufferSize)
         {
             _buffer = ArrayPool<byte>.Shared.Rent(initialBufferSize);
             _maxCount = _count = _offset = 0;
@@ -71,7 +69,7 @@ namespace RuQu.Reader
             _buffer = null!;
 
             ArrayPool<byte>.Shared.Return(toReturn);
-            _stream= null!;
+            _stream = null!;
         }
 
         public void Offset(int count)

@@ -4,9 +4,9 @@ using System.Text;
 namespace RuQu
 {
 
-    public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleReadOptions, IntState>
+    public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleOptions>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(ref ByteReadBuffer bufferState, ref IntState state)
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> bufferState, SimpleOptions state)
         {
             var bytes = bufferState.Remaining;
             if (bytes.Length > 7)
@@ -35,7 +35,7 @@ namespace RuQu
             return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
         }
 
-        protected override void HandleFirstBlock(ref ByteReadBuffer bufferState)
+        protected override void HandleFirstBlock(IReadBuffer<byte> bufferState)
         {
             bufferState.IngoreUtf8Bom();
         }

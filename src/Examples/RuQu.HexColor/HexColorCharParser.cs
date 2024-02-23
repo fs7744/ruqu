@@ -2,9 +2,9 @@
 
 namespace RuQu
 {
-    public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleReadOptions, IntState>
+    public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleOptions>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(ref IReadBuffer<char> bufferState, ref IntState state)
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> bufferState, SimpleOptions state)
         {
             var bytes = bufferState.Remaining;
             if (bytes.Length > 7)

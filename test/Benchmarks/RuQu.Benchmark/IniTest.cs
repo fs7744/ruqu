@@ -88,7 +88,7 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_Ini()
         {
-            IniParser.Instance.Read(testdata, new SimpleReadOptions());
+            IniParser.Instance.Read(testdata, new IniParserOptions());
         }
 
         [Benchmark]

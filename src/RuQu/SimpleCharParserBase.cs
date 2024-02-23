@@ -1,21 +1,19 @@
 ﻿using RuQu.Reader;
-using System.Reflection.PortableExecutable;
-using System.Xml.Linq;
 
 namespace RuQu
 {
-    public abstract class SimpleCharParserBase<T, Options, State> where State : new() where Options : IReadOptions
+    public abstract class SimpleCharParserBase<T, Options> where Options : IOptions
     {
         public async ValueTask<T?> ReadAsync(TextReader reader, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new CharReadBuffer(reader, options.BufferSize);
-            State state = new();
+            Options state = (Options)options.Clone();
+            IReadBuffer<char> bufferState = new CharReadBuffer(reader, state.BufferSize);
             try
             {
                 while (true)
                 {
                     bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                    T? value = ContinueRead(ref bufferState, ref state);
+                    T? value = ContinueRead(bufferState, state);
 
                     if (bufferState.IsFinalBlock)
                     {
@@ -42,8 +40,15 @@ namespace RuQu
         public ValueTask<T?> ReadAsync(string content, Options options, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> bufferState = new StringReadBuffer(content);
-            State state = new();
-            return ValueTask.FromResult(ContinueRead(ref bufferState, ref state));
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
+        public ValueTask<T?> ReadAsync(char[] content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<char> bufferState = new CharArrayReadBuffer(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
         }
 
         public T? Read(Stream stream, Options options)
@@ -59,20 +64,27 @@ namespace RuQu
         public T? Read(string content, Options options)
         {
             IReadBuffer<char> bufferState = new StringReadBuffer(content);
-            State state = new();
-            return ContinueRead(ref bufferState, ref state);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
+
+        public T? Read(char[] content, Options options)
+        {
+            IReadBuffer<char> bufferState = new CharArrayReadBuffer(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
         }
 
         public T? Read(TextReader reader, Options options)
         {
-            IReadBuffer<char> bufferState = new CharReadBuffer(reader, options.BufferSize);
-            State state = new();
+            Options state = (Options)options.Clone();
+            IReadBuffer<char> bufferState = new CharReadBuffer(reader, state.BufferSize);
             try
             {
                 while (true)
                 {
                     bufferState.ReadNextBuffer();
-                    T? value = ContinueRead(ref bufferState, ref state);
+                    T? value = ContinueRead(bufferState, state);
 
                     if (bufferState.IsFinalBlock)
                     {
@@ -86,6 +98,6 @@ namespace RuQu
             }
         }
 
-        protected abstract T? ContinueRead(ref IReadBuffer<char> bufferState, ref State state);
+        protected abstract T? ContinueRead(IReadBuffer<char> bufferState, Options state);
     }
 }

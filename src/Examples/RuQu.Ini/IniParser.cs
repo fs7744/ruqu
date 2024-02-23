@@ -2,11 +2,11 @@
 
 namespace RuQu
 {
-    public class IniParser : SimpleCharParserBase<IDictionary<string, string>, SimpleReadOptions, IniParserState>
+    public class IniParser : SimpleCharParserBase<IDictionary<string, string>, IniParserOptions>
     {
         public static readonly IniParser Instance = new IniParser();
 
-        protected override IDictionary<string, string>? ContinueRead(ref IReadBuffer<char> bufferState, ref IniParserState state)
+        protected override IDictionary<string, string>? ContinueRead(IReadBuffer<char> bufferState, IniParserOptions state)
         {
             int count;
             var total = 0;

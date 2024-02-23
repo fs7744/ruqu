@@ -55,7 +55,7 @@ namespace RuQu.UT
 
                 """;
 
-            var a = IniParser.Instance.Read(s, new SimpleReadOptions());
+            var a = IniParser.Instance.Read(s, new IniParserOptions());
             Assert.Equal(4, a.Count);
         }
     }

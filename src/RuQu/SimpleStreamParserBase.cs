@@ -1,42 +1,26 @@
 ﻿using RuQu.Reader;
-using System.Reflection.PortableExecutable;
 
 namespace RuQu
 {
-    public interface IReadOptions
-    {
-        public int BufferSize { get; set; }
-    }
-
-    public struct IntState
-    {
-        public int CurrentState;
-    }
-
-    public class SimpleReadOptions : IReadOptions
-    {
-        public int BufferSize { get; set; } = 4096;
-    }
-
-    public abstract class SimpleStreamParserBase<T, Options, State> where State : new() where Options : IReadOptions
+    public abstract class SimpleStreamParserBase<T, Options> where Options : IOptions
     {
         public async ValueTask<T?> ReadAsync(Stream stream, Options options, CancellationToken cancellationToken = default)
         {
-            var bufferState = new ByteReadBuffer(stream, options.BufferSize);
-            State state = new();
+            Options state = (Options)options.Clone();
+            IReadBuffer<byte> bufferState = new ByteReadBuffer(stream, state.BufferSize);
             try
             {
-                bufferState = (ByteReadBuffer)await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                HandleFirstBlock(ref bufferState);
+                bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
+                HandleFirstBlock(bufferState);
                 do
                 {
-                    T? value = ContinueRead(ref bufferState, ref state);
+                    T? value = ContinueRead(bufferState, state);
 
                     if (bufferState.IsFinalBlock)
                     {
                         return value;
                     }
-                    bufferState = (ByteReadBuffer)await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
+                    bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
                 } while (true);
             }
             finally
@@ -45,17 +29,24 @@ namespace RuQu
             }
         }
 
+        public ValueTask<T?> ReadAsync(byte[] content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<byte> bufferState = new ByteArrayReadBuffer(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
         public T? Read(Stream stream, Options options)
         {
-            var bufferState = new ByteReadBuffer(stream, options.BufferSize);
-            State state = new();
+            Options state = (Options)options.Clone();
+            IReadBuffer<byte> bufferState = new ByteReadBuffer(stream, state.BufferSize);
             try
             {
                 bufferState.ReadNextBuffer();
-                HandleFirstBlock(ref bufferState);
+                HandleFirstBlock(bufferState);
                 do
                 {
-                    T? value = ContinueRead(ref bufferState, ref state);
+                    T? value = ContinueRead(bufferState, state);
 
                     if (bufferState.IsFinalBlock)
                     {
@@ -70,9 +61,16 @@ namespace RuQu
             }
         }
 
-        protected abstract T? ContinueRead(ref ByteReadBuffer bufferState, ref State state);
+        public T? Read(byte[] content, Options options)
+        {
+            IReadBuffer<byte> bufferState = new ByteArrayReadBuffer(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
 
-        protected virtual void HandleFirstBlock(ref ByteReadBuffer bufferState)
+        protected abstract T? ContinueRead(IReadBuffer<byte> bufferState, Options state);
+
+        protected virtual void HandleFirstBlock(IReadBuffer<byte> bufferState)
         {
         }
     }
