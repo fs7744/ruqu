@@ -46,7 +46,7 @@ namespace RuQu
 
         public ValueTask<T?> ReadAsync(char[] content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new CharArrayReadBuffer(content);
+            IReadBuffer<char> bufferState = new ArrayReadBuffer<char>(content);
             Options state = (Options)options.Clone();
             return ValueTask.FromResult(ContinueRead(bufferState, state));
         }
@@ -98,7 +98,7 @@ namespace RuQu
 
         public T? Read(char[] content, Options options)
         {
-            IReadBuffer<char> bufferState = new CharArrayReadBuffer(content);
+            IReadBuffer<char> bufferState = new ArrayReadBuffer<char>(content);
             Options state = (Options)options.Clone();
             return ContinueRead(bufferState, state);
         }

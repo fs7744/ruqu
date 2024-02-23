@@ -1,16 +1,16 @@
 ﻿namespace RuQu.Reader
 {
-    public class CharArrayReadBuffer : IReadBuffer<char>
+    public class ArrayReadBuffer<T> : IReadBuffer<T>
     {
-        internal char[] _buffer;
+        internal T[] _buffer;
         internal int _offset;
 
-        public CharArrayReadBuffer(char[] array)
+        public ArrayReadBuffer(T[] array)
         {
             _buffer = array;
         }
 
-        public ReadOnlySpan<char> Remaining => _buffer.AsSpan(_offset, _buffer.Length - _offset);
+        public ReadOnlySpan<T> Remaining => _buffer.AsSpan(_offset, _buffer.Length - _offset);
 
         public bool IsFinalBlock => true;
 
@@ -32,9 +32,9 @@
         {
         }
 
-        public ValueTask<IReadBuffer<char>> ReadNextBufferAsync(CancellationToken cancellationToken)
+        public ValueTask<IReadBuffer<T>> ReadNextBufferAsync(CancellationToken cancellationToken)
         {
-            return ValueTask.FromResult(this as IReadBuffer<char>);
+            return ValueTask.FromResult(this as IReadBuffer<T>);
         }
     }
 }
