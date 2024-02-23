@@ -49,7 +49,7 @@ namespace RuQu
                 }
 
                 string key = line[0..separator].Trim().ToString();
-                string value = line[(separator + 1)..].Trim().ToString();
+                var value = line[(separator + 1)..].Trim();
 
                 // Remove quotes
                 if (value.Length > 1 && value[0] == '"' && value[^1] == '"')
@@ -57,24 +57,9 @@ namespace RuQu
                     value = value[1..^1];
                 }
 
-                state.Section[key] = value;
+                state.Section[key] = value.ToString();
             } while (count > 0);
             return bufferState.IsFinalBlock ? state.Config : null;
-        }
-    }
-
-    public class IniSection : Dictionary<string, string>
-    {
-        public IniSection() : base(StringComparer.OrdinalIgnoreCase)
-        {
-
-        }
-    }
-
-    public class IniConfig : Dictionary<string, IniSection>
-    {
-        public IniConfig() : base(StringComparer.OrdinalIgnoreCase)
-        {
         }
     }
 }

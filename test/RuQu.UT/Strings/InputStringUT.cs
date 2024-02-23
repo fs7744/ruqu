@@ -39,7 +39,7 @@ namespace RuQu.UT
         //}
 
         [Fact]
-        public void INIParseTest()
+        public unsafe void INIParseTest()
         {
             var s = """
 
