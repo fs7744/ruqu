@@ -7,12 +7,12 @@
 
         public static (byte red, byte green, byte blue) ParseStream(Stream stream)
         {
-            return instance.Read(stream, new SimpleOptions() { BufferSize = 8 });
+            return instance.Read(stream, new SimpleOptions<(byte red, byte green, byte blue)>() { BufferSize = 8 });
         }
 
         public static (byte red, byte green, byte blue) Parse(string str)
         {
-            return _instance.Read(str, new SimpleOptions() { BufferSize = 8 });
+            return _instance.Read(str, new SimpleOptions<(byte red, byte green, byte blue)>() { BufferSize = 8 });
         }
     }
 }

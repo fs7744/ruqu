@@ -1,9 +1,13 @@
 ﻿namespace RuQu
 {
-    public interface IOptions
+    public interface IOptions<T>
     {
         public int BufferSize { get; set; }
 
-        public IOptions Clone();
+        public T WriteObject { get; }
+
+        public IOptions<T> CloneReadOptions();
+
+        public IOptions<T> CloneWriteOptionsWithValue(T writeObject);
     }
 }
