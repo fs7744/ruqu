@@ -8,127 +8,127 @@ namespace RuQu
 
         public virtual async ValueTask<T?> ReadAsync(Stream stream, Options options, CancellationToken cancellationToken = default)
         {
-            Options state = (Options)options.Clone();
-            IReadBuffer<byte> bufferState = new ByteReadBuffer(stream, state.BufferSize);
+            Options opt = (Options)options.Clone();
+            IReadBuffer<byte> buffer = new ByteReadBuffer(stream, options.BufferSize);
             try
             {
-                bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                HandleFirstBlock(bufferState);
+                buffer = await buffer.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
+                HandleFirstBlock(buffer);
                 do
                 {
-                    T? value = ContinueRead(bufferState, state);
+                    T? value = ContinueRead(buffer, opt);
 
-                    if (bufferState.IsFinalBlock)
+                    if (buffer.IsFinalBlock)
                     {
                         return value;
                     }
-                    bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
+                    buffer = await buffer.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
                 } while (true);
             }
             finally
             {
-                bufferState.Dispose();
+                buffer.Dispose();
             }
         }
 
         public virtual ValueTask<T?> ReadAsync(byte[] content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<byte> bufferState = new ArrayReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<byte> buffer = new ArrayReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(Span<byte> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlySpanReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<byte> buffer = new ReadOnlySpanReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(ReadOnlySpan<byte> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlySpanReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<byte> buffer = new ReadOnlySpanReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(Memory<byte> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlyMemoryReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<byte> buffer = new ReadOnlyMemoryReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(ReadOnlyMemory<byte> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlyMemoryReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<byte> buffer = new ReadOnlyMemoryReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual T? Read(Stream stream, Options options)
         {
-            Options state = (Options)options.Clone();
-            IReadBuffer<byte> bufferState = new ByteReadBuffer(stream, state.BufferSize);
+            Options opt = (Options)options.Clone();
+            IReadBuffer<byte> buffer = new ByteReadBuffer(stream, options.BufferSize);
             try
             {
-                bufferState.ReadNextBuffer();
-                HandleFirstBlock(bufferState);
+                buffer.ReadNextBuffer();
+                HandleFirstBlock(buffer);
                 do
                 {
-                    T? value = ContinueRead(bufferState, state);
+                    T? value = ContinueRead(buffer, opt);
 
-                    if (bufferState.IsFinalBlock)
+                    if (buffer.IsFinalBlock)
                     {
                         return value;
                     }
-                    bufferState.ReadNextBuffer();
+                    buffer.ReadNextBuffer();
                 } while (true);
             }
             finally
             {
-                bufferState.Dispose();
+                buffer.Dispose();
             }
         }
 
         public virtual T? Read(byte[] content, Options options)
         {
-            IReadBuffer<byte> bufferState = new ArrayReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<byte> buffer = new ArrayReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(Span<byte> content, Options options)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlySpanReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<byte> buffer = new ReadOnlySpanReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(ReadOnlySpan<byte> content, Options options)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlySpanReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<byte> buffer = new ReadOnlySpanReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(Memory<byte> content, Options options)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlyMemoryReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<byte> buffer = new ReadOnlyMemoryReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(ReadOnlyMemory<byte> content, Options options)
         {
-            IReadBuffer<byte> bufferState = new ReadOnlyMemoryReadBuffer<byte>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<byte> buffer = new ReadOnlyMemoryReadBuffer<byte>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
-        protected abstract T? ContinueRead(IReadBuffer<byte> bufferState, Options state);
+        protected abstract T? ContinueRead(IReadBuffer<byte> buffer, Options options);
 
-        protected virtual void HandleFirstBlock(IReadBuffer<byte> bufferState)
+        protected virtual void HandleFirstBlock(IReadBuffer<byte> buffer)
         {
         }
 

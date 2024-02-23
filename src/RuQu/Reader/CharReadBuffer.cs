@@ -110,29 +110,29 @@ namespace RuQu.Reader
 
         public async ValueTask<IReadBuffer<char>> ReadNextBufferAsync(CancellationToken cancellationToken)
         {
-            // Since mutable structs don't work well with async state machines,
+            // Since mutable structs don't work well with async options machines,
             // make all updates on a copy which is returned once complete.
-            CharReadBuffer bufferState = this;
+            CharReadBuffer buffer = this;
 
             do
             {
-                int bytesRead = await _stream.ReadAsync(bufferState._buffer.AsMemory(bufferState._count), cancellationToken).ConfigureAwait(false);
+                int bytesRead = await _stream.ReadAsync(buffer._buffer.AsMemory(buffer._count), cancellationToken).ConfigureAwait(false);
 
                 if (bytesRead == 0)
                 {
-                    bufferState._isFinalBlock = true;
+                    buffer._isFinalBlock = true;
                     break;
                 }
 
-                bufferState._count += bytesRead;
+                buffer._count += bytesRead;
             }
-            while (bufferState._count < bufferState._buffer.Length);
+            while (buffer._count < buffer._buffer.Length);
 
             if (_count > _maxCount)
             {
                 _maxCount = _count;
             }
-            return bufferState;
+            return buffer;
         }
     }
 }

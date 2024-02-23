@@ -6,21 +6,21 @@ namespace RuQu
 
     public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleOptions>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> bufferState, SimpleOptions state)
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> buffer, SimpleOptions options)
         {
-            var bytes = bufferState.Remaining;
+            var bytes = buffer.Remaining;
             if (bytes.Length > 7)
             {
                 throw new FormatException("Only 7 utf-8 chars");
             }
 
-            if (!bufferState.IsFinalBlock && bytes.Length < 7)
+            if (!buffer.IsFinalBlock && bytes.Length < 7)
             {
-                bufferState.AdvanceBuffer(0);
+                buffer.AdvanceBuffer(0);
                 return default;
             }
 
-            if (bufferState.IsFinalBlock && bytes.Length < 7)
+            if (buffer.IsFinalBlock && bytes.Length < 7)
             {
                 throw new FormatException("Must 7 utf-8 chars");
             }
@@ -35,9 +35,9 @@ namespace RuQu
             return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
         }
 
-        protected override void HandleFirstBlock(IReadBuffer<byte> bufferState)
+        protected override void HandleFirstBlock(IReadBuffer<byte> buffer)
         {
-            bufferState.IngoreUtf8Bom();
+            buffer.IngoreUtf8Bom();
         }
     }
 }

@@ -4,21 +4,21 @@ namespace RuQu
 {
     public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleOptions>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> bufferState, SimpleOptions state)
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, SimpleOptions options)
         {
-            var bytes = bufferState.Remaining;
+            var bytes = buffer.Remaining;
             if (bytes.Length > 7)
             {
                 throw new FormatException("Only 7 utf-8 chars");
             }
 
-            if (!bufferState.IsFinalBlock && bytes.Length < 7)
+            if (!buffer.IsFinalBlock && bytes.Length < 7)
             {
-                bufferState.AdvanceBuffer(0);
+                buffer.AdvanceBuffer(0);
                 return default;
             }
 
-            if (bufferState.IsFinalBlock && bytes.Length < 7)
+            if (buffer.IsFinalBlock && bytes.Length < 7)
             {
                 throw new FormatException("Must 7 utf-8 chars");
             }

@@ -6,17 +6,17 @@ namespace RuQu
     {
         public static readonly IniParser Instance = new IniParser();
 
-        protected override IniConfig? ContinueRead(IReadBuffer<char> bufferState, IniParserOptions state)
+        protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, IniParserOptions options)
         {
             int count;
             var total = 0;
             do
             {
-                count = bufferState.ReadLine(out var rawLine);
+                count = buffer.ReadLine(out var rawLine);
                 total += count;
-                if (count == 0 && bufferState.IsFinalBlock)
+                if (count == 0 && buffer.IsFinalBlock)
                 {
-                    rawLine = bufferState.Remaining;
+                    rawLine = buffer.Remaining;
                     total += rawLine.Length;
                 }
                 var line = rawLine.Trim();
@@ -36,8 +36,8 @@ namespace RuQu
                 if (line[0] == '[' && line[^1] == ']')
                 {
                     // remove the brackets
-                    state.Section = new IniSection();
-                    state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
+                    options.Section = new IniSection();
+                    options.Config.Add(line[1..^1].Trim().ToString(), options.Section);
                     continue;
                 }
 
@@ -57,9 +57,9 @@ namespace RuQu
                     value = value[1..^1];
                 }
 
-                state.Section[key] = value.ToString();
+                options.Section[key] = value.ToString();
             } while (count > 0);
-            return bufferState.IsFinalBlock ? state.Config : null;
+            return buffer.IsFinalBlock ? options.Config : null;
         }
     }
 }

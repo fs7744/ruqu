@@ -8,16 +8,16 @@ namespace RuQu
 
         public virtual async ValueTask<T?> ReadAsync(TextReader reader, Options options, CancellationToken cancellationToken = default)
         {
-            Options state = (Options)options.Clone();
-            IReadBuffer<char> bufferState = new CharReadBuffer(reader, state.BufferSize);
+            Options opt = (Options)options.Clone();
+            IReadBuffer<char> buffer = new CharReadBuffer(reader, options.BufferSize);
             try
             {
                 while (true)
                 {
-                    bufferState = await bufferState.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                    T? value = ContinueRead(bufferState, state);
+                    buffer = await buffer.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
+                    T? value = ContinueRead(buffer, opt);
 
-                    if (bufferState.IsFinalBlock)
+                    if (buffer.IsFinalBlock)
                     {
                         return value;
                     }
@@ -25,7 +25,7 @@ namespace RuQu
             }
             finally
             {
-                bufferState.Dispose();
+                buffer.Dispose();
             }
         }
 
@@ -41,44 +41,44 @@ namespace RuQu
 
         public virtual ValueTask<T?> ReadAsync(string content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new StringReadBuffer(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new StringReadBuffer(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(char[] content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new ArrayReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(Span<char> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(ReadOnlySpan<char> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(Memory<char> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, Options options, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ValueTask.FromResult(ContinueRead(bufferState, state));
+            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(buffer, opt));
         }
 
         public virtual T? Read(Stream stream, Options options)
@@ -93,58 +93,58 @@ namespace RuQu
 
         public virtual T? Read(string content, Options options)
         {
-            IReadBuffer<char> bufferState = new StringReadBuffer(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new StringReadBuffer(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(char[] content, Options options)
         {
-            IReadBuffer<char> bufferState = new ArrayReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(Span<char> content, Options options)
         {
-            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(ReadOnlySpan<char> content, Options options)
         {
-            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(Memory<char> content, Options options)
         {
-            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(ReadOnlyMemory<char> content, Options options)
         {
-            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options state = (Options)options.Clone();
-            return ContinueRead(bufferState, state);
+            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options opt = (Options)options.Clone();
+            return ContinueRead(buffer, opt);
         }
 
         public virtual T? Read(TextReader reader, Options options)
         {
-            Options state = (Options)options.Clone();
-            IReadBuffer<char> bufferState = new CharReadBuffer(reader, state.BufferSize);
+            Options opt = (Options)options.Clone();
+            IReadBuffer<char> buffer = new CharReadBuffer(reader, options.BufferSize);
             try
             {
                 while (true)
                 {
-                    bufferState.ReadNextBuffer();
-                    T? value = ContinueRead(bufferState, state);
+                    buffer.ReadNextBuffer();
+                    T? value = ContinueRead(buffer, opt);
 
-                    if (bufferState.IsFinalBlock)
+                    if (buffer.IsFinalBlock)
                     {
                         return value;
                     }
@@ -152,11 +152,11 @@ namespace RuQu
             }
             finally
             {
-                bufferState.Dispose();
+                buffer.Dispose();
             }
         }
 
-        protected abstract T? ContinueRead(IReadBuffer<char> bufferState, Options state);
+        protected abstract T? ContinueRead(IReadBuffer<char> buffer, Options options);
 
         #endregion Read
     }
