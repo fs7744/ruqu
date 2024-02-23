@@ -2,11 +2,11 @@
 
 namespace RuQu
 {
-    public class IniParser : SimpleCharParserBase<IDictionary<string, string>, IniParserOptions>
+    public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
     {
         public static readonly IniParser Instance = new IniParser();
 
-        protected override IDictionary<string, string>? ContinueRead(IReadBuffer<char> bufferState, IniParserOptions state)
+        protected override IniConfig? ContinueRead(IReadBuffer<char> bufferState, IniParserOptions state)
         {
             int count;
             var total = 0;
@@ -36,7 +36,8 @@ namespace RuQu
                 if (line[0] == '[' && line[^1] == ']')
                 {
                     // remove the brackets
-                    state.SectionPix = string.Concat(line[1..^1].Trim(), ":");
+                    state.Section = new IniSection();
+                    state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
                     continue;
                 }
 
@@ -47,7 +48,7 @@ namespace RuQu
                     throw new FormatException(rawLine.ToString());
                 }
 
-                string key = state.SectionPix + line[0..separator].Trim().ToString();
+                string key = line[0..separator].Trim().ToString();
                 string value = line[(separator + 1)..].Trim().ToString();
 
                 // Remove quotes
@@ -56,14 +57,24 @@ namespace RuQu
                     value = value[1..^1];
                 }
 
-                if (state.Dict.ContainsKey(key))
-                {
-                    throw new FormatException(key);
-                }
-
-                state.Dict[key] = value;
+                state.Section[key] = value;
             } while (count > 0);
-            return bufferState.IsFinalBlock ? state.Dict : null;
+            return bufferState.IsFinalBlock ? state.Config : null;
+        }
+    }
+
+    public class IniSection : Dictionary<string, string>
+    {
+        public IniSection() : base(StringComparer.OrdinalIgnoreCase)
+        {
+
+        }
+    }
+
+    public class IniConfig : Dictionary<string, IniSection>
+    {
+        public IniConfig() : base(StringComparer.OrdinalIgnoreCase)
+        {
         }
     }
 }

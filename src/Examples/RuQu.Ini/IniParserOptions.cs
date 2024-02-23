@@ -2,14 +2,14 @@
 {
     public class IniParserOptions : IOptions
     {
-        internal IDictionary<string, string> Dict;
-        internal string SectionPix;
+        internal IniConfig Config;
+        internal IniSection Section;
 
         public int BufferSize { get; set; } = 4096;
 
         public IOptions Clone()
         {
-            var clone = new IniParserOptions() { Dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) };
+            var clone = new IniParserOptions() { Config = new IniConfig() };
             return clone;
         }
     }
