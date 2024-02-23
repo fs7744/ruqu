@@ -3,23 +3,23 @@ using System.Diagnostics;
 
 namespace RuQu.Writer
 {
-    public class PooledByteBufferWriter : IBufferWriter<byte>, IDisposable
+    public class PooledBufferWriter<T> : IBufferWriter<T>, IDisposable
     {
-        private byte[]? _rentedBuffer;
+        private T[]? _rentedBuffer;
         private int _index;
 
         private const int MinimumBufferSize = 256;
 
         public const int MaximumBufferSize = 0X7FFFFFC7;
 
-        public PooledByteBufferWriter(int initialCapacity)
+        public PooledBufferWriter(int initialCapacity)
         {
             Debug.Assert(initialCapacity > 0);
-            _rentedBuffer = ArrayPool<byte>.Shared.Rent(initialCapacity);
+            _rentedBuffer = ArrayPool<T>.Shared.Rent(initialCapacity);
             _index = 0;
         }
 
-        public ReadOnlyMemory<byte> WrittenMemory
+        public ReadOnlyMemory<T> WrittenMemory
         {
             get
             {
@@ -66,9 +66,9 @@ namespace RuQu.Writer
             Debug.Assert(_rentedBuffer != null);
 
             ClearHelper();
-            byte[] toReturn = _rentedBuffer;
+            T[] toReturn = _rentedBuffer;
             _rentedBuffer = null;
-            ArrayPool<byte>.Shared.Return(toReturn);
+            ArrayPool<T>.Shared.Return(toReturn);
         }
 
         private void ClearHelper()
@@ -89,9 +89,9 @@ namespace RuQu.Writer
             }
 
             ClearHelper();
-            byte[] toReturn = _rentedBuffer;
+            T[] toReturn = _rentedBuffer;
             _rentedBuffer = null;
-            ArrayPool<byte>.Shared.Return(toReturn);
+            ArrayPool<T>.Shared.Return(toReturn);
         }
 
         public void InitializeEmptyInstance(int initialCapacity)
@@ -99,7 +99,7 @@ namespace RuQu.Writer
             Debug.Assert(initialCapacity > 0);
             Debug.Assert(_rentedBuffer is null);
 
-            _rentedBuffer = ArrayPool<byte>.Shared.Rent(initialCapacity);
+            _rentedBuffer = ArrayPool<T>.Shared.Rent(initialCapacity);
             _index = 0;
         }
 
@@ -111,26 +111,16 @@ namespace RuQu.Writer
             _index += count;
         }
 
-        public Memory<byte> GetMemory(int sizeHint = MinimumBufferSize)
+        public Memory<T> GetMemory(int sizeHint = MinimumBufferSize)
         {
             CheckAndResizeBuffer(sizeHint);
             return _rentedBuffer.AsMemory(_index);
         }
 
-        public Span<byte> GetSpan(int sizeHint = MinimumBufferSize)
+        public Span<T> GetSpan(int sizeHint = MinimumBufferSize)
         {
             CheckAndResizeBuffer(sizeHint);
             return _rentedBuffer.AsSpan(_index);
-        }
-
-        internal ValueTask WriteToStreamAsync(Stream destination, CancellationToken cancellationToken)
-        {
-            return destination.WriteAsync(WrittenMemory, cancellationToken);
-        }
-
-        internal void WriteToStream(Stream destination)
-        {
-            destination.Write(WrittenMemory.Span);
         }
 
         private void CheckAndResizeBuffer(int sizeHint)
@@ -163,17 +153,17 @@ namespace RuQu.Writer
                     }
                 }
 
-                byte[] oldBuffer = _rentedBuffer;
+                T[] oldBuffer = _rentedBuffer;
 
-                _rentedBuffer = ArrayPool<byte>.Shared.Rent(newSize);
+                _rentedBuffer = ArrayPool<T>.Shared.Rent(newSize);
 
                 Debug.Assert(oldBuffer.Length >= _index);
                 Debug.Assert(_rentedBuffer.Length >= _index);
 
-                Span<byte> oldBufferAsSpan = oldBuffer.AsSpan(0, _index);
+                Span<T> oldBufferAsSpan = oldBuffer.AsSpan(0, _index);
                 oldBufferAsSpan.CopyTo(_rentedBuffer);
                 oldBufferAsSpan.Clear();
-                ArrayPool<byte>.Shared.Return(oldBuffer);
+                ArrayPool<T>.Shared.Return(oldBuffer);
             }
 
             Debug.Assert(_rentedBuffer.Length - _index > 0);

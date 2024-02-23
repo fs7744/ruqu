@@ -1,8 +1,7 @@
 ﻿using RuQu.Reader;
 using RuQu.Writer;
 using System.Buffers;
-using System.IO;
-using System.Threading;
+using System.Text;
 
 namespace RuQu
 {
@@ -149,7 +148,7 @@ namespace RuQu
         public virtual async ValueTask WriteAsync(T value, Stream stream, Options options, CancellationToken cancellationToken = default)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
@@ -161,10 +160,12 @@ namespace RuQu
             await stream.FlushAsync().ConfigureAwait(false);
         }
 
-        public virtual async Task<R> WriteAsync<R>(T value, Options options, Func<ReadOnlyMemory<byte>, Task<R>> convert, CancellationToken cancellationToken = default)
+        public ValueTask<string> WriteToUTF8StringAsync(T value, Options options, CancellationToken cancellationToken = default) => WriteToAsync<string>(value, options, i => ValueTask.FromResult(Encoding.UTF8.GetString(i.Span)), cancellationToken);
+
+        public virtual async ValueTask<R> WriteToAsync<R>(T value, Options options, Func<ReadOnlyMemory<byte>, ValueTask<R>> convert, CancellationToken cancellationToken = default)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
@@ -174,10 +175,10 @@ namespace RuQu
             return await convert(bufferWriter.WrittenMemory);
         }
 
-        public virtual async Task<byte[]> WriteAsync(T value, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<byte[]> WriteToBytesAsync(T value, Options options, CancellationToken cancellationToken = default)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
@@ -190,7 +191,7 @@ namespace RuQu
         public virtual void Write(T value, Stream stream, Options options)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
@@ -205,7 +206,7 @@ namespace RuQu
         public virtual byte[] WriteToBytes(T value, Options options)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
@@ -215,10 +216,12 @@ namespace RuQu
             return bufferWriter.WrittenMemory.ToArray();
         }
 
+        public string WriteToUTF8String(T value, Options options) => WriteTo<string>(value, options, i => Encoding.UTF8.GetString(i.Span));
+
         public virtual R WriteTo<R>(T value, Options options, Func<ReadOnlyMemory<byte>, R> convert)
         {
             bool isFinalBlock;
-            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {

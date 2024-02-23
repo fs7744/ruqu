@@ -1,4 +1,9 @@
 ﻿using RuQu.Reader;
+using RuQu.Writer;
+using System.Buffers;
+using System.IO;
+using System.Text;
+using System.Threading;
 
 namespace RuQu
 {
@@ -168,25 +173,85 @@ namespace RuQu
 
         #region Write
 
-        public virtual async ValueTask WriteAsync(TextWriter writer, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<string> WriteToStringAsync(T value, Options options, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            bool isFinalBlock;
+            using var bufferWriter = new PooledBufferWriter<char>(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            var sb = new StringBuilder(options.BufferSize);
+            do
+            {
+                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+                sb.Append(bufferWriter.WrittenMemory);
+                bufferWriter.Clear();
+            }
+            while (!isFinalBlock);
+            return sb.ToString();
         }
 
-        public virtual ValueTask WriteAsync(Stream stream, System.Text.Encoding encoding, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask WriteAsync(T value, TextWriter writer, Options options, CancellationToken cancellationToken = default)
         {
-            return WriteAsync(new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options, cancellationToken);
+            bool isFinalBlock;
+            using var bufferWriter = new PooledBufferWriter<char>(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+                await writer.WriteAsync(bufferWriter.WrittenMemory, cancellationToken).ConfigureAwait(false);
+                bufferWriter.Clear();
+            }
+            while (!isFinalBlock);
+            await writer.FlushAsync().ConfigureAwait(false);
         }
 
-        public virtual void Write(Stream stream, System.Text.Encoding encoding, Options options)
+        public virtual ValueTask WriteAsync(T value, Stream stream, System.Text.Encoding encoding, Options options, CancellationToken cancellationToken = default)
         {
-            Write(new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options);
+            return WriteAsync(value, new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options, cancellationToken);
         }
 
-        public virtual void Write(TextWriter writer, Options options)
+        public virtual void Write(T value, Stream stream, System.Text.Encoding encoding, Options options)
         {
-            throw new NotImplementedException();
+            Write(value, new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options);
         }
+
+        public virtual void Write(T value, TextWriter writer, Options options)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledBufferWriter<char>(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = ContinueWrite(bufferWriter, opt);
+                writer.Write(bufferWriter.WrittenMemory.Span);
+                bufferWriter.Clear();
+            }
+            while (!isFinalBlock);
+            writer.Flush();
+        }
+
+        public virtual string WriteToString(T value, Options options)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledBufferWriter<char>(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            var sb = new StringBuilder(options.BufferSize);
+            do
+            {
+                isFinalBlock = ContinueWrite(bufferWriter, opt);
+                sb.Append(bufferWriter.WrittenMemory);
+                bufferWriter.Clear();
+            }
+            while (!isFinalBlock);
+            return sb.ToString();
+        }
+
+        public virtual ValueTask<bool> ContinueWriteAsync(IBufferWriter<char> writer, Options options, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(ContinueWrite(writer, options));
+        }
+
+        public abstract bool ContinueWrite(IBufferWriter<char> writer, Options options);
 
         #endregion
     }

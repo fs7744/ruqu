@@ -1,4 +1,5 @@
 ﻿using RuQu.Reader;
+using System.Buffers;
 
 namespace RuQu
 {
@@ -60,6 +61,11 @@ namespace RuQu
                 options.Section[key] = value.ToString();
             } while (count > 0);
             return buffer.IsFinalBlock ? options.Config : null;
+        }
+
+        public override bool ContinueWrite(IBufferWriter<char> writer, IniParserOptions options)
+        {
+            throw new NotImplementedException();
         }
     }
 }

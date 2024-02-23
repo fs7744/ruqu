@@ -18,6 +18,8 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
+            var s = HexColor.CharParser.WriteToString((red, green, blue), new SimpleOptions<(byte red, byte green, byte blue)>());
+            Assert.Equal("#2F14DF", s);
         }
 
         //[Theory]

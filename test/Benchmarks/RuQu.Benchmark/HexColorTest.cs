@@ -3,10 +3,13 @@ using System.Text;
 
 namespace RuQu.Benchmark
 {
-
     [MemoryDiagnoser]
     public class HexColorTest
     {
+        private readonly MemoryStream stream;
+        private readonly (byte red, byte green, byte blue) hexColor;
+        private readonly SimpleOptions<(byte red, byte green, byte blue)> options;
+
         public byte[] UTF8Bytes { get; }
 
         private static (byte red, byte green, byte blue) HexColorHande(string str)
@@ -28,6 +31,9 @@ namespace RuQu.Benchmark
         public HexColorTest()
         {
             UTF8Bytes = Encoding.UTF8.GetBytes("#2F14DF");
+            stream = new MemoryStream(UTF8Bytes);
+            hexColor = (40, 20, 214);
+            options = new SimpleOptions<(byte red, byte green, byte blue)>() { BufferSize = 8 };
         }
 
         [Benchmark]
@@ -45,7 +51,14 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_HexColor_Stream()
         {
-            (byte red, byte green, byte blue) = HexColor.ParseStream(new MemoryStream(UTF8Bytes));
+            stream.Seek(0, SeekOrigin.Begin);
+            (byte red, byte green, byte blue) = HexColor.ParseStream(stream);
+        }
+
+        [Benchmark]
+        public void RuQu_HexColor_WriteToString()
+        {
+            var s = HexColor.CharParser.WriteToString(hexColor, options);
         }
 
         [Benchmark]
