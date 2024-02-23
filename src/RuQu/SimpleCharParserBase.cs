@@ -4,6 +4,8 @@ namespace RuQu
 {
     public abstract class SimpleCharParserBase<T, Options> where Options : IOptions
     {
+        #region Read
+
         public async ValueTask<T?> ReadAsync(TextReader reader, Options options, CancellationToken cancellationToken = default)
         {
             Options state = (Options)options.Clone();
@@ -155,5 +157,7 @@ namespace RuQu
         }
 
         protected abstract T? ContinueRead(IReadBuffer<char> bufferState, Options state);
+
+        #endregion Read
     }
 }

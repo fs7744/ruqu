@@ -4,6 +4,8 @@ namespace RuQu
 {
     public abstract class SimpleStreamParserBase<T, Options> where Options : IOptions
     {
+        #region Read
+
         public async ValueTask<T?> ReadAsync(Stream stream, Options options, CancellationToken cancellationToken = default)
         {
             Options state = (Options)options.Clone();
@@ -129,5 +131,7 @@ namespace RuQu
         protected virtual void HandleFirstBlock(IReadBuffer<byte> bufferState)
         {
         }
+
+        #endregion Read
     }
 }

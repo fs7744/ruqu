@@ -1,4 +1,6 @@
-﻿namespace RuQu.Reader
+﻿using System.Runtime.CompilerServices;
+
+namespace RuQu.Reader
 {
     public class StringReadBuffer : IReadBuffer<char>
     {
@@ -10,10 +12,19 @@
             _buffer = str;
         }
 
-        public ReadOnlySpan<char> Remaining => _buffer.AsSpan(_offset, _buffer.Length - _offset);
+        public ReadOnlySpan<char> Remaining
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _buffer.AsSpan(_offset, _buffer.Length - _offset);
+        }
 
-        public bool IsFinalBlock => true;
+        public bool IsFinalBlock
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => true;
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AdvanceBuffer(int bytesConsumed)
         {
         }
@@ -23,11 +34,13 @@
             _buffer = null!;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Offset(int count)
         {
             _offset = Math.Min(count + _offset, _buffer.Length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadNextBuffer()
         {
         }

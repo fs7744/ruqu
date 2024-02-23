@@ -21,9 +21,19 @@ namespace RuQu.Reader
             _length = span.Length;
         }
 
-        public ReadOnlySpan<T> Remaining => new ReadOnlySpan<T>(_buffer, _length)[_offset.._length];
-        public bool IsFinalBlock => true;
+        public ReadOnlySpan<T> Remaining
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new ReadOnlySpan<T>(_buffer, _length)[_offset.._length];
+        }
 
+        public bool IsFinalBlock
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AdvanceBuffer(int bytesConsumed)
         {
         }
@@ -32,11 +42,13 @@ namespace RuQu.Reader
         {
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Offset(int count)
         {
             _offset = Math.Min(count + _offset, _length);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadNextBuffer()
         {
         }

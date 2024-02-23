@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace RuQu.Reader
 {
@@ -12,7 +13,11 @@ namespace RuQu.Reader
         private bool _isFinalBlock;
         private Stream _stream;
 
-        public ReadOnlySpan<byte> Remaining => _buffer.AsSpan(_offset, _count - _offset);
+        public ReadOnlySpan<byte> Remaining
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _buffer.AsSpan(_offset, _count - _offset);
+        }
 
         public bool IsFinalBlock => _isFinalBlock;
 
@@ -72,6 +77,7 @@ namespace RuQu.Reader
             _stream = null!;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Offset(int count)
         {
             _offset = Math.Min(count + _offset, _count);
