@@ -1,6 +1,8 @@
 ﻿using RuQu.Reader;
 using RuQu.Writer;
 using System.Buffers;
+using System.IO;
+using System.Threading;
 
 namespace RuQu
 {
@@ -148,26 +150,82 @@ namespace RuQu
         {
             bool isFinalBlock;
             using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
-                isFinalBlock = await ContinueWriteAsync(bufferWriter, options, cancellationToken);
+                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
                 await bufferWriter.WriteToStreamAsync(stream, cancellationToken).ConfigureAwait(false);
                 bufferWriter.Clear();
             }
             while (!isFinalBlock);
+            await stream.FlushAsync().ConfigureAwait(false);
+        }
+
+        public virtual async Task<R> WriteAsync<R>(T value, Options options, Func<ReadOnlyMemory<byte>, Task<R>> convert, CancellationToken cancellationToken = default)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+            }
+            while (!isFinalBlock);
+            return await convert(bufferWriter.WrittenMemory);
+        }
+
+        public virtual async Task<byte[]> WriteAsync(T value, Options options, CancellationToken cancellationToken = default)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+            }
+            while (!isFinalBlock);
+            return bufferWriter.WrittenMemory.ToArray();
         }
 
         public virtual void Write(T value, Stream stream, Options options)
         {
             bool isFinalBlock;
             using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
             do
             {
-                isFinalBlock = ContinueWrite(bufferWriter, options);
+                isFinalBlock = ContinueWrite(bufferWriter, opt);
                 bufferWriter.WriteToStream(stream);
                 bufferWriter.Clear();
             }
             while (!isFinalBlock);
+            stream.Flush();
+        }
+
+        public virtual byte[] WriteToBytes(T value, Options options)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = ContinueWrite(bufferWriter, opt);
+            }
+            while (!isFinalBlock);
+            return bufferWriter.WrittenMemory.ToArray();
+        }
+
+        public virtual R WriteTo<R>(T value, Options options, Func<ReadOnlyMemory<byte>, R> convert)
+        {
+            bool isFinalBlock;
+            using var bufferWriter = new PooledByteBufferWriter(options.BufferSize);
+            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
+            do
+            {
+                isFinalBlock = ContinueWrite(bufferWriter, opt);
+            }
+            while (!isFinalBlock);
+            return convert(bufferWriter.WrittenMemory);
         }
 
         public virtual ValueTask<bool> ContinueWriteAsync(IBufferWriter<byte> writer, Options options, CancellationToken cancellationToken)

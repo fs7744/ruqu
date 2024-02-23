@@ -43,7 +43,10 @@ namespace RuQu
         public override bool ContinueWrite(IBufferWriter<byte> writer, SimpleOptions<(byte red, byte green, byte blue)> options)
         {
             var span = writer.GetSpan(7);
-
+            span[0] = (byte)'#';
+            (byte red, byte green, byte blue) = options.WriteObject;
+            var c = Encoding.UTF8.GetEncoder().GetBytes(Convert.ToHexString(new byte[] { red, green, blue }), span.Slice(1), true);
+            writer.Advance(c + 1);
             return true;
         }
     }

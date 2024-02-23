@@ -11,8 +11,9 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
-            var a = Encoding.UTF8.GetBytes("#2F14DF");
+            var a = HexColor.StreamParser.WriteToBytes((red, green, blue), new SimpleOptions<(byte red, byte green, byte blue)>());
             using Stream stream = new MemoryStream(a);
+            stream.Seek(0, SeekOrigin.Begin);
             (red, green, blue) = HexColor.ParseStream(stream);
             Assert.Equal(47, red);
             Assert.Equal(20, green);
