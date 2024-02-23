@@ -51,6 +51,34 @@ namespace RuQu
             return ValueTask.FromResult(ContinueRead(bufferState, state));
         }
 
+        public ValueTask<T?> ReadAsync(Span<char> content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
+        public ValueTask<T?> ReadAsync(ReadOnlySpan<char> content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
+        public ValueTask<T?> ReadAsync(Memory<char> content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
+        public ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, Options options, CancellationToken cancellationToken = default)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ValueTask.FromResult(ContinueRead(bufferState, state));
+        }
+
         public T? Read(Stream stream, Options options)
         {
             return Read(new StreamReader(stream, bufferSize: options.BufferSize), options);
@@ -71,6 +99,34 @@ namespace RuQu
         public T? Read(char[] content, Options options)
         {
             IReadBuffer<char> bufferState = new CharArrayReadBuffer(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
+
+        public T? Read(Span<char> content, Options options)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
+
+        public T? Read(ReadOnlySpan<char> content, Options options)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlySpanReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
+
+        public T? Read(Memory<char> content, Options options)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
+            Options state = (Options)options.Clone();
+            return ContinueRead(bufferState, state);
+        }
+
+        public T? Read(ReadOnlyMemory<char> content, Options options)
+        {
+            IReadBuffer<char> bufferState = new ReadOnlyMemoryReadBuffer<char>(content);
             Options state = (Options)options.Clone();
             return ContinueRead(bufferState, state);
         }
