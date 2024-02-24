@@ -2,9 +2,14 @@
 
 namespace RuQu
 {
-    public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleOptions<(byte red, byte green, byte blue)>>
+    public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), NoneReadState>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, SimpleOptions<(byte red, byte green, byte blue)> options)
+        protected override NoneReadState InitReadState()
+        {
+            return null;
+        }
+
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, ref NoneReadState state)
         {
             var bytes = buffer.Remaining;
             if (bytes.Length > 7)
@@ -36,9 +41,9 @@ namespace RuQu
 
         private static readonly ReadOnlyMemory<char> Tag = "#".AsMemory();
 
-        public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
+        protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite((byte red, byte green, byte blue) value)
         {
-            (byte red, byte green, byte blue) = options.WriteObject;
+            (byte red, byte green, byte blue) = value;
             yield return Tag;
             yield return Convert.ToHexString(new byte[] { red, green, blue }).AsMemory();
         }

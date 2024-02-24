@@ -2,11 +2,17 @@
 
 namespace RuQu
 {
-    public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
+    public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
     {
         public static readonly IniParser Instance = new IniParser();
 
-        protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, IniParserOptions options)
+        private static readonly ReadOnlyMemory<char> NewLine = Environment.NewLine.AsMemory();
+        private static readonly ReadOnlyMemory<char> SectionBegin = "[".AsMemory();
+        private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
+        private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
+
+
+        protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, ref IniParserReadState state)
         {
             int count;
             var total = 0;
@@ -36,8 +42,8 @@ namespace RuQu
                 if (line[0] == '[' && line[^1] == ']')
                 {
                     // remove the brackets
-                    options.Section = new IniSection();
-                    options.Config.Add(line[1..^1].Trim().ToString(), options.Section);
+                    state.Section = new IniSection();
+                    state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
                     continue;
                 }
 
@@ -57,19 +63,19 @@ namespace RuQu
                     value = value[1..^1];
                 }
 
-                options.Section[key] = value.ToString();
+                state.Section[key] = value.ToString();
             } while (count > 0);
-            return buffer.IsFinalBlock ? options.Config : null;
+            return buffer.IsFinalBlock ? state.Config : null;
         }
 
-        private static readonly ReadOnlyMemory<char> NewLine = Environment.NewLine.AsMemory();
-        private static readonly ReadOnlyMemory<char> SectionBegin = "[".AsMemory();
-        private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
-        private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
-
-        protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
+        protected override IniParserReadState InitReadState()
         {
-            foreach (var item in options.WriteObject)
+            return new IniParserReadState();
+        }
+
+        protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniConfig value)
+        {
+            foreach (var item in value)
             {
                 yield return SectionBegin;
                 yield return item.Key.AsMemory();

@@ -3,20 +3,22 @@ using System.Text;
 
 namespace RuQu
 {
-    public abstract class SimpleCharParserBase<T, Options> where Options : IOptions<T>
+    public abstract class SimpleCharParserBase<T, ReadState>
     {
+        public int BufferSize { get; set; } = 4096;
+
         #region Read
 
-        public virtual async ValueTask<T?> ReadAsync(TextReader reader, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<T?> ReadAsync(TextReader reader, CancellationToken cancellationToken = default)
         {
-            Options opt = (Options)options.CloneReadOptions();
-            IReadBuffer<char> buffer = new CharReadBuffer(reader, options.BufferSize);
+            IReadBuffer<char> buffer = new CharReadBuffer(reader, BufferSize);
+            var state = InitReadState();
             try
             {
                 while (true)
                 {
                     buffer = await buffer.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                    T? value = await ContinueReadAsync(buffer, opt, cancellationToken);
+                    T? value = await ContinueReadAsync(buffer, ref state, cancellationToken).ConfigureAwait(false);
 
                     if (buffer.IsFinalBlock)
                     {
@@ -30,120 +32,120 @@ namespace RuQu
             }
         }
 
-        public virtual ValueTask<T?> ReadAsync(Stream stream, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            return ReadAsync(new StreamReader(stream, bufferSize: options.BufferSize), options, cancellationToken);
+            return ReadAsync(new StreamReader(stream, bufferSize: BufferSize), cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(Stream stream, System.Text.Encoding encoding, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(Stream stream, System.Text.Encoding encoding, CancellationToken cancellationToken = default)
         {
-            return ReadAsync(new StreamReader(stream, encoding, bufferSize: options.BufferSize), options, cancellationToken);
+            return ReadAsync(new StreamReader(stream, encoding, bufferSize: BufferSize), cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(string content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(string content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new StringReadBuffer(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(char[] content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(char[] content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(Span<char> content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(Span<char> content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(ReadOnlySpan<char> content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(ReadOnlySpan<char> content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(Memory<char> content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(Memory<char> content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, CancellationToken cancellationToken = default)
         {
             IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueReadAsync(buffer, opt, cancellationToken);
+            var state = InitReadState();
+            return ContinueReadAsync(buffer, ref state, cancellationToken);
         }
 
-        public virtual T? Read(Stream stream, Options options)
+        public virtual T? Read(Stream stream)
         {
-            return Read(new StreamReader(stream, bufferSize: options.BufferSize), options);
+            return Read(new StreamReader(stream, bufferSize: BufferSize));
         }
 
-        public virtual T? Read(Stream stream, System.Text.Encoding encoding, Options options)
+        public virtual T? Read(Stream stream, System.Text.Encoding encoding)
         {
-            return Read(new StreamReader(stream, encoding, bufferSize: options.BufferSize), options);
+            return Read(new StreamReader(stream, encoding, bufferSize: BufferSize));
         }
 
-        public virtual T? Read(string content, Options options)
+        public virtual T? Read(string content)
         {
             IReadBuffer<char> buffer = new StringReadBuffer(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(char[] content, Options options)
+        public virtual T? Read(char[] content)
         {
             IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(Span<char> content, Options options)
+        public virtual T? Read(Span<char> content)
         {
             IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(ReadOnlySpan<char> content, Options options)
+        public virtual T? Read(ReadOnlySpan<char> content)
         {
             IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(Memory<char> content, Options options)
+        public virtual T? Read(Memory<char> content)
         {
             IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(ReadOnlyMemory<char> content, Options options)
+        public virtual T? Read(ReadOnlyMemory<char> content)
         {
             IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            Options opt = (Options)options.CloneReadOptions();
-            return ContinueRead(buffer, opt);
+            var state = InitReadState();
+            return ContinueRead(buffer, ref state);
         }
 
-        public virtual T? Read(TextReader reader, Options options)
+        public virtual T? Read(TextReader reader)
         {
-            Options opt = (Options)options.CloneReadOptions();
-            IReadBuffer<char> buffer = new CharReadBuffer(reader, options.BufferSize);
+            IReadBuffer<char> buffer = new CharReadBuffer(reader, BufferSize);
+            var state = InitReadState();
             try
             {
                 while (true)
                 {
                     buffer.ReadNextBuffer();
-                    T? value = ContinueRead(buffer, opt);
+                    T? value = ContinueRead(buffer, ref state);
 
                     if (buffer.IsFinalBlock)
                     {
@@ -157,78 +159,76 @@ namespace RuQu
             }
         }
 
-        protected virtual ValueTask<T?> ContinueReadAsync(IReadBuffer<char> buffer, Options options, CancellationToken cancellationToken)
+        protected virtual ValueTask<T?> ContinueReadAsync(IReadBuffer<char> buffer, ref ReadState state, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return ValueTask.FromResult(ContinueRead(buffer, options));
+            return ValueTask.FromResult(ContinueRead(buffer, ref state));
         }
 
-        protected abstract T? ContinueRead(IReadBuffer<char> buffer, Options options);
+        protected abstract T? ContinueRead(IReadBuffer<char> buffer, ref ReadState state);
+
+        protected abstract ReadState InitReadState();
 
         #endregion Read
 
         #region Write
 
-        public virtual async ValueTask<string> WriteToStringAsync(T value, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<string> WriteToStringAsync(T value, CancellationToken cancellationToken = default)
         {
-            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            var sb = new StringBuilder(opt.BufferSize);
-            await foreach (var item in ContinueWriteAsync(opt, cancellationToken).ConfigureAwait(false))
+            var sb = new StringBuilder(BufferSize);
+            await foreach (var item in ContinueWriteAsync(value, cancellationToken).ConfigureAwait(false))
             {
                 sb.Append(item);
             }
             return sb.ToString();
         }
 
-        public virtual async ValueTask WriteAsync(T value, TextWriter writer, Options options, CancellationToken cancellationToken = default)
+        public virtual async ValueTask WriteAsync(T value, TextWriter writer, CancellationToken cancellationToken = default)
         {
-            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            await foreach (var item in ContinueWriteAsync(opt, cancellationToken).ConfigureAwait(false))
+            await foreach (var item in ContinueWriteAsync(value, cancellationToken).ConfigureAwait(false))
             {
                 await writer.WriteAsync(item, cancellationToken).ConfigureAwait(false);
             }
             await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public virtual ValueTask WriteAsync(T value, Stream stream, System.Text.Encoding encoding, Options options, CancellationToken cancellationToken = default)
+        public virtual ValueTask WriteAsync(T value, Stream stream, System.Text.Encoding encoding, CancellationToken cancellationToken = default)
         {
-            return WriteAsync(value, new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options, cancellationToken);
+            return WriteAsync(value, new StreamWriter(stream, encoding, bufferSize: BufferSize), cancellationToken);
         }
 
-        public virtual void Write(T value, Stream stream, System.Text.Encoding encoding, Options options)
+        public virtual void Write(T value, Stream stream, System.Text.Encoding encoding)
         {
-            Write(value, new StreamWriter(stream, encoding, bufferSize: options.BufferSize), options);
+            Write(value, new StreamWriter(stream, encoding, bufferSize: BufferSize));
         }
 
-        public virtual void Write(T value, TextWriter writer, Options options)
+        public virtual void Write(T value, TextWriter writer)
         {
-            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            foreach (var item in ContinueWrite(opt))
+            foreach (var item in ContinueWrite(value))
             {
                 writer.Write(item.Span);
             }
             writer.Flush();
         }
 
-        public virtual string WriteToString(T value, Options options)
+        public virtual string WriteToString(T value)
         {
-            Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            var sb = new StringBuilder(opt.BufferSize);
-            foreach (var item in ContinueWrite(opt))
+            var sb = new StringBuilder(BufferSize);
+            foreach (var item in ContinueWrite(value))
             {
                 sb.Append(item.Span);
             }
             return sb.ToString();
         }
 
-        protected virtual IAsyncEnumerable<ReadOnlyMemory<char>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
+        protected virtual IAsyncEnumerable<ReadOnlyMemory<char>> ContinueWriteAsync(T value, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return ContinueWrite(options).ToAsyncEnumerable();
+            return ContinueWrite(value).ToAsyncEnumerable();
         }
 
-        protected abstract IEnumerable<ReadOnlyMemory<char>> ContinueWrite(Options options);
+        protected abstract IEnumerable<ReadOnlyMemory<char>> ContinueWrite(T value);
 
-        #endregion
+        #endregion Write
     }
 }

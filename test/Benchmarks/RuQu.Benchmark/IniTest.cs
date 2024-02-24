@@ -21,12 +21,11 @@ namespace RuQu.Benchmark
                 """;
         private readonly IniConfig iniConfig;
         private readonly IniData pdata;
-        private readonly IniParserOptions iniParserOptions = new IniParserOptions();
         IniDataParser parser = new IniDataParser();
 
         public IniTest()
         {
-            iniConfig = IniParser.Instance.Read(testdata, iniParserOptions);
+            iniConfig = IniParser.Instance.Read(testdata);
             pdata = parser.Parse(testdata);
         }
 
@@ -97,7 +96,7 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_Read_Ini()
         {
-            IniParser.Instance.Read(testdata, new IniParserOptions());
+            IniParser.Instance.Read(testdata);
         }
 
         [Benchmark]
@@ -109,7 +108,7 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_Write_Ini()
         {
-            IniParser.Instance.WriteToString(iniConfig, iniParserOptions);
+            IniParser.Instance.WriteToString(iniConfig);
         }
 
         [Benchmark]

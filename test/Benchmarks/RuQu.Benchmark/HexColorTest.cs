@@ -8,7 +8,6 @@ namespace RuQu.Benchmark
     {
         private readonly MemoryStream stream;
         private readonly (byte red, byte green, byte blue) hexColor;
-        private readonly SimpleOptions<(byte red, byte green, byte blue)> options;
 
         public byte[] UTF8Bytes { get; }
 
@@ -33,7 +32,6 @@ namespace RuQu.Benchmark
             UTF8Bytes = Encoding.UTF8.GetBytes("#2F14DF");
             stream = new MemoryStream(UTF8Bytes);
             hexColor = (40, 20, 214);
-            options = new SimpleOptions<(byte red, byte green, byte blue)>() { BufferSize = 8 };
         }
 
         [Benchmark]
@@ -58,7 +56,7 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_HexColor_WriteToString()
         {
-            var s = HexColor.CharParser.WriteToString(hexColor, options);
+            var s = HexColor.CharParser.WriteToString(hexColor);
         }
 
         [Benchmark]

@@ -9,16 +9,16 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
-            var a = HexColor.StreamParser.WriteToBytes((red, green, blue), new SimpleOptions<(byte red, byte green, byte blue)>());
+            var a = HexColor.StreamParser.WriteToBytes((red, green, blue));
             using Stream stream = new MemoryStream(a);
             stream.Seek(0, SeekOrigin.Begin);
             (red, green, blue) = HexColor.ParseStream(stream);
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
-            var s = HexColor.CharParser.WriteToString((red, green, blue), new SimpleOptions<(byte red, byte green, byte blue)>());
+            var s = HexColor.CharParser.WriteToString((red, green, blue));
             Assert.Equal("#2F14DF", s);
-            (red, green, blue) = HexColor.CharParser.Read("#2F15DF".AsSpan(), new SimpleOptions<(byte red, byte green, byte blue)>());
+            (red, green, blue) = HexColor.CharParser.Read("#2F15DF".AsSpan());
             Assert.Equal(47, red);
             Assert.Equal(21, green);
             Assert.Equal(223, blue);
@@ -60,10 +60,10 @@ namespace RuQu.UT
 
                 """;
 
-            var a = IniParser.Instance.Read(s, new IniParserOptions());
+            var a = IniParser.Instance.Read(s);
             Assert.Equal(2, a.Count);
             Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
-            var ss = IniParser.Instance.WriteToString(a, new IniParserOptions());
+            var ss = IniParser.Instance.WriteToString(a);
         }
     }
 }

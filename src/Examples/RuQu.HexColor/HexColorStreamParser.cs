@@ -3,9 +3,21 @@ using System.Text;
 
 namespace RuQu
 {
-    public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleOptions<(byte red, byte green, byte blue)>>
+    public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), NoneReadState>
     {
-        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> buffer, SimpleOptions<(byte red, byte green, byte blue)> options)
+        protected override void HandleReadFirstBlock(IReadBuffer<byte> buffer)
+        {
+            buffer.IngoreUtf8Bom();
+        }
+
+        protected override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite((byte red, byte green, byte blue) value)
+        {
+            (byte red, byte green, byte blue) = value;
+            yield return "#"u8.ToArray().AsMemory();
+            yield return Encoding.UTF8.GetBytes(Convert.ToHexString(new byte[] { red, green, blue })).AsMemory();
+        }
+
+        protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> buffer, ref NoneReadState state)
         {
             var bytes = buffer.Remaining;
             if (bytes.Length > 7)
@@ -34,16 +46,9 @@ namespace RuQu
             return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
         }
 
-        protected override void HandleReadFirstBlock(IReadBuffer<byte> buffer)
+        protected override NoneReadState InitReadState()
         {
-            buffer.IngoreUtf8Bom();
-        }
-
-        protected override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
-        {
-            (byte red, byte green, byte blue) = options.WriteObject;
-            yield return "#"u8.ToArray().AsMemory();
-            yield return Encoding.UTF8.GetBytes(Convert.ToHexString(new byte[] { red, green, blue })).AsMemory();
+            return null;
         }
     }
 }
