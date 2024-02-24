@@ -4,6 +4,11 @@ namespace RuQu
 {
     public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), NoneReadState>
     {
+        public HexColorCharParser()
+        {
+            BufferSize = 8;
+        }
+
         protected override NoneReadState InitReadState()
         {
             return null;

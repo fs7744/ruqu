@@ -7,9 +7,19 @@ RuQu just a parse helper lib, it want to be high performance, but the code maybe
 ## HexColor String Parse Example
 
 ``` csharp
-public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleOptions<(byte red, byte green, byte blue)>>
+public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), NoneReadState>
 {
-    protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> buffer, SimpleOptions<(byte red, byte green, byte blue)> options)
+    public HexColorStreamParser()
+    {
+        BufferSize = 8;
+    }
+
+    protected override NoneReadState InitReadState()
+    {
+        return null;
+    }
+
+    protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, ref NoneReadState state)
     {
         var bytes = buffer.Remaining;
         if (bytes.Length > 7)
@@ -28,26 +38,24 @@ public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green
             throw new FormatException("Must 7 utf-8 chars");
         }
 
-        if (bytes[0] is not (byte)'#')
+        if (bytes[0] is not '#')
         {
             throw new FormatException("No perfix with #");
         }
 
-        var c = Encoding.UTF8.GetString(bytes[1..]);
+        var c = new string(bytes[1..]);
 
         return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
     }
 
-    protected override void HandleReadFirstBlock(IReadBuffer<byte> buffer)
-    {
-        buffer.IngoreUtf8Bom();
-    }
 
-    public override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
+    private static readonly ReadOnlyMemory<char> Tag = "#".AsMemory();
+
+    protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite((byte red, byte green, byte blue) value)
     {
-        (byte red, byte green, byte blue) = options.WriteObject;
-        yield return "#"u8.ToArray().AsMemory();
-        yield return Encoding.UTF8.GetBytes(Convert.ToHexString(new byte[] { red, green, blue })).AsMemory();
+        (byte red, byte green, byte blue) = value;
+        yield return Tag;
+        yield return Convert.ToHexString(new byte[] { red, green, blue }).AsMemory();
     }
 }
 ```
@@ -78,11 +86,17 @@ Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
 ## Ini Char Parse Example
 
 ``` csharp
-public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
+public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
 {
     public static readonly IniParser Instance = new IniParser();
 
-    protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, IniParserOptions options)
+    private static readonly ReadOnlyMemory<char> NewLine = Environment.NewLine.AsMemory();
+    private static readonly ReadOnlyMemory<char> SectionBegin = "[".AsMemory();
+    private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
+    private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
+
+
+    protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, ref IniParserReadState state)
     {
         int count;
         var total = 0;
@@ -112,8 +126,8 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
             if (line[0] == '[' && line[^1] == ']')
             {
                 // remove the brackets
-                options.Section = new IniSection();
-                options.Config.Add(line[1..^1].Trim().ToString(), options.Section);
+                state.Section = new IniSection();
+                state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
                 continue;
             }
 
@@ -133,26 +147,31 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
                 value = value[1..^1];
             }
 
-            options.Section[key] = value.ToString();
+            state.Section[key] = value.ToString();
         } while (count > 0);
-        return buffer.IsFinalBlock ? options.Config : null;
+        return buffer.IsFinalBlock ? state.Config : null;
     }
 
-    public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
+    protected override IniParserReadState InitReadState()
     {
-        foreach (var item in options.WriteObject)
+        return new IniParserReadState();
+    }
+
+    protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniConfig value)
+    {
+        foreach (var item in value)
         {
-            yield return "[".AsMemory();
+            yield return SectionBegin;
             yield return item.Key.AsMemory();
-            yield return "]".AsMemory();
-            yield return Environment.NewLine.AsMemory();
+            yield return SectionEnd;
+            yield return NewLine;
 
             foreach (var c in item.Value)
             {
                 yield return c.Key.AsMemory();
-                yield return "=".AsMemory();
+                yield return Separator;
                 yield return c.Value.AsMemory();
-                yield return Environment.NewLine.AsMemory();
+                yield return NewLine;
             }
         }
     }

@@ -5,6 +5,10 @@ namespace RuQu
 {
     public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), NoneReadState>
     {
+        public HexColorStreamParser()
+        {
+            BufferSize = 8;
+        }
         protected override void HandleReadFirstBlock(IReadBuffer<byte> buffer)
         {
             buffer.IngoreUtf8Bom();
