@@ -5,7 +5,7 @@ namespace RuQu
 {
     public abstract class SimpleCharParserBase<T, ReadState>
     {
-        public int BufferSize { get; set; } = 2048;
+        public int BufferSize { get; set; } = 256;
 
         #region Read
 
