@@ -7,9 +7,9 @@ RuQu just a parse helper lib, it want to be high performance, but the code maybe
 ## HexColor String Parse Example
 
 ``` csharp
-public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), SimpleOptions<(byte red, byte green, byte blue)>>
+public class HexColorStreamParser : SimpleStreamParserBase<(byte red, byte green, byte blue), SimpleOptions<(byte red, byte green, byte blue)>>
 {
-    protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, SimpleOptions<(byte red, byte green, byte blue)> options)
+    protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<byte> buffer, SimpleOptions<(byte red, byte green, byte blue)> options)
     {
         var bytes = buffer.Remaining;
         if (bytes.Length > 7)
@@ -28,25 +28,26 @@ public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, by
             throw new FormatException("Must 7 utf-8 chars");
         }
 
-        if (bytes[0] is not '#')
+        if (bytes[0] is not (byte)'#')
         {
             throw new FormatException("No perfix with #");
         }
 
-        var c = new string(bytes[1..]);
+        var c = Encoding.UTF8.GetString(bytes[1..]);
 
         return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
     }
 
-    public override bool ContinueWrite(IBufferWriter<char> writer, SimpleOptions<(byte red, byte green, byte blue)> options)
+    protected override void HandleReadFirstBlock(IReadBuffer<byte> buffer)
     {
-        var span = writer.GetSpan(7);
-        span[0] = '#';
+        buffer.IngoreUtf8Bom();
+    }
+
+    public override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
+    {
         (byte red, byte green, byte blue) = options.WriteObject;
-        var str = Convert.ToHexString(new byte[] { red, green, blue });
-        str.CopyTo(span.Slice(1));
-        writer.Advance(str.Length + 1);
-        return true;
+        yield return "#"u8.ToArray().AsMemory();
+        yield return Encoding.UTF8.GetBytes(Convert.ToHexString(new byte[] { red, green, blue })).AsMemory();
     }
 }
 ```
@@ -55,24 +56,24 @@ public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, by
 
 ```
 
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3155/23H2/2023Update/SunValley3)
-13th Gen Intel Core i9-13900KF, 1 CPU, 32 logical and 24 physical cores
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.22000.2538/21H2/SunValley)
+Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK 8.0.200
   [Host]     : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
   DefaultJob : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
 
 
 ```
-| Method                      | Mean      | Error    | StdDev   | Gen0   | Gen1   | Allocated |
-|---------------------------- |----------:|---------:|---------:|-------:|-------:|----------:|
-| Hande_HexColor              |  25.93 ns | 0.131 ns | 0.123 ns | 0.0051 |      - |      96 B |
-| RuQu_HexColor               |  32.09 ns | 0.351 ns | 0.328 ns | 0.0102 |      - |     192 B |
-| RuQu_HexColor_Stream        |  56.39 ns | 0.762 ns | 0.713 ns | 0.0110 |      - |     208 B |
-| RuQu_HexColor_WriteToString |  37.97 ns | 0.564 ns | 0.528 ns | 0.0123 |      - |     232 B |
-| Superpower_HexColor         | 295.87 ns | 2.706 ns | 2.531 ns | 0.0424 |      - |     800 B |
-| Pidgin_HexColor             | 138.74 ns | 2.593 ns | 2.299 ns | 0.0186 |      - |     352 B |
-| Sprache_HexColor            | 311.89 ns | 4.468 ns | 3.961 ns | 0.1564 | 0.0005 |    2944 B |
 
+| Method                      | Mean      | Error     | StdDev    | Median    | Gen0   | Gen1   | Allocated |
+|---------------------------- |----------:|----------:|----------:|----------:|-------:|-------:|----------:|
+| Hande_HexColor              |  46.20 ns |  0.730 ns |  0.609 ns |  46.21 ns | 0.0114 |      - |      96 B |
+| RuQu_HexColor               |  62.77 ns |  1.252 ns |  1.671 ns |  62.52 ns | 0.0229 |      - |     192 B |
+| RuQu_HexColor_Stream        | 125.64 ns |  2.276 ns |  2.129 ns | 125.75 ns | 0.0248 |      - |     208 B |
+| RuQu_HexColor_WriteToString |  65.45 ns |  1.333 ns |  3.626 ns |  64.39 ns | 0.0315 |      - |     264 B |
+| Superpower_HexColor         | 464.40 ns |  9.186 ns |  7.671 ns | 461.79 ns | 0.0954 |      - |     800 B |
+| Pidgin_HexColor             | 282.57 ns |  3.472 ns |  3.248 ns | 282.52 ns | 0.0420 |      - |     352 B |
+| Sprache_HexColor            | 643.78 ns | 12.498 ns | 21.558 ns | 645.83 ns | 0.3519 | 0.0010 |    2944 B |
 
 ## Ini Char Parse Example
 
@@ -137,9 +138,23 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
         return buffer.IsFinalBlock ? options.Config : null;
     }
 
-    public override bool ContinueWrite(IBufferWriter<char> writer, IniParserOptions options)
+    public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
     {
-        throw new NotImplementedException();
+        foreach (var item in options.WriteObject)
+        {
+            yield return "[".AsMemory();
+            yield return item.Key.AsMemory();
+            yield return "]".AsMemory();
+            yield return Environment.NewLine.AsMemory();
+
+            foreach (var c in item.Value)
+            {
+                yield return c.Key.AsMemory();
+                yield return "=".AsMemory();
+                yield return c.Value.AsMemory();
+                yield return Environment.NewLine.AsMemory();
+            }
+        }
     }
 }
 ```
@@ -148,17 +163,19 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserOptions>
 
 ```
 
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3155/23H2/2023Update/SunValley3)
-13th Gen Intel Core i9-13900KF, 1 CPU, 32 logical and 24 physical cores
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.22000.2538/21H2/SunValley)
+Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK 8.0.200
   [Host]     : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
   DefaultJob : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
 
 
 ```
-| Method        | Mean       | Error    | StdDev   | Gen0   | Gen1   | Allocated |
-|-------------- |-----------:|---------:|---------:|-------:|-------:|----------:|
-| Hande_Ini     |   279.8 ns |  5.55 ns |  5.19 ns | 0.0949 |      - |   1.75 KB |
-| RuQu_Ini      |   283.4 ns |  4.70 ns |  4.39 ns | 0.0587 |      - |   1.09 KB |
-| IniDataParser | 2,310.2 ns | 31.58 ns | 29.54 ns | 0.3738 | 0.0038 |   6.91 KB |
 
+| Method              | Mean       | Error    | StdDev    | Median     | Gen0   | Gen1   | Allocated |
+|-------------------- |-----------:|---------:|----------:|-----------:|-------:|-------:|----------:|
+| Hande_Read_Ini      |   536.0 ns |  8.89 ns |   7.88 ns |   537.1 ns | 0.2136 |      - |   1.75 KB |
+| RuQu_Read_Ini       |   481.5 ns |  9.21 ns |  11.65 ns |   480.7 ns | 0.1326 |      - |   1.09 KB |
+| IniDataParser_Read  | 4,489.1 ns | 79.28 ns | 148.91 ns | 4,451.8 ns | 0.8392 | 0.0076 |   6.91 KB |
+| RuQu_Write_Ini      |   799.7 ns | 24.96 ns |  69.98 ns |   774.4 ns | 1.0347 | 0.0315 |   8.45 KB |
+| IniDataParser_Write | 1,241.5 ns | 19.97 ns |  17.70 ns | 1,244.6 ns | 0.2441 |      - |   2.01 KB |
