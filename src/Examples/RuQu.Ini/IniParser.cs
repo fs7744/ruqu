@@ -62,21 +62,26 @@ namespace RuQu
             return buffer.IsFinalBlock ? options.Config : null;
         }
 
+        private static readonly ReadOnlyMemory<char> NewLine = Environment.NewLine.AsMemory();
+        private static readonly ReadOnlyMemory<char> SectionBegin = "[".AsMemory();
+        private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
+        private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
+
         public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
         {
             foreach (var item in options.WriteObject)
             {
-                yield return "[".AsMemory();
+                yield return SectionBegin;
                 yield return item.Key.AsMemory();
-                yield return "]".AsMemory();
-                yield return Environment.NewLine.AsMemory();
+                yield return SectionEnd;
+                yield return NewLine;
 
                 foreach (var c in item.Value)
                 {
                     yield return c.Key.AsMemory();
-                    yield return "=".AsMemory();
+                    yield return Separator;
                     yield return c.Value.AsMemory();
-                    yield return Environment.NewLine.AsMemory();
+                    yield return NewLine;
                 }
             }
         }

@@ -33,10 +33,13 @@ namespace RuQu
             return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
         }
 
+
+        private static readonly ReadOnlyMemory<char> Tag = "#".AsMemory();
+
         public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
         {
             (byte red, byte green, byte blue) = options.WriteObject;
-            yield return "#".AsMemory();
+            yield return Tag;
             yield return Convert.ToHexString(new byte[] { red, green, blue }).AsMemory();
         }
     }
