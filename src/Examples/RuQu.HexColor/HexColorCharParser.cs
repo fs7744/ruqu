@@ -1,6 +1,4 @@
 ﻿using RuQu.Reader;
-using System.Buffers;
-using System.Text;
 
 namespace RuQu
 {
@@ -35,15 +33,11 @@ namespace RuQu
             return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
         }
 
-        public override bool ContinueWrite(IBufferWriter<char> writer, SimpleOptions<(byte red, byte green, byte blue)> options)
+        public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
         {
-            var span = writer.GetSpan(7);
-            span[0] = '#';
             (byte red, byte green, byte blue) = options.WriteObject;
-            var str = Convert.ToHexString(new byte[] { red, green, blue });
-            str.CopyTo(span.Slice(1));
-            writer.Advance(str.Length + 1);
-            return true;
+            yield return "#".AsMemory();
+            yield return Convert.ToHexString(new byte[] { red, green, blue }).AsMemory();
         }
     }
 }

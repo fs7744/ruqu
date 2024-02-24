@@ -1,5 +1,4 @@
 ﻿using RuQu.Reader;
-using System.Buffers;
 using System.Text;
 
 namespace RuQu
@@ -40,14 +39,11 @@ namespace RuQu
             buffer.IngoreUtf8Bom();
         }
 
-        public override bool ContinueWrite(IBufferWriter<byte> writer, SimpleOptions<(byte red, byte green, byte blue)> options)
+        public override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
         {
-            var span = writer.GetSpan(7);
-            span[0] = (byte)'#';
             (byte red, byte green, byte blue) = options.WriteObject;
-            var c = Encoding.UTF8.GetEncoder().GetBytes(Convert.ToHexString(new byte[] { red, green, blue }), span.Slice(1), true);
-            writer.Advance(c + 1);
-            return true;
+            yield return "#"u8.ToArray().AsMemory();
+            yield return Encoding.UTF8.GetBytes(Convert.ToHexString(new byte[] { red, green, blue })).AsMemory();
         }
     }
 }

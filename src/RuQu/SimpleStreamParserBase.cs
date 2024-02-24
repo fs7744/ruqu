@@ -1,6 +1,5 @@
 ﻿using RuQu.Reader;
 using RuQu.Writer;
-using System.Buffers;
 using System.Text;
 
 namespace RuQu
@@ -147,72 +146,65 @@ namespace RuQu
 
         public virtual async ValueTask WriteAsync(T value, Stream stream, Options options, CancellationToken cancellationToken = default)
         {
-            bool isFinalBlock;
-            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            await foreach (var item in ContinueWriteAsync(opt, cancellationToken).ConfigureAwait(false))
             {
-                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
-                await bufferWriter.WriteToStreamAsync(stream, cancellationToken).ConfigureAwait(false);
-                bufferWriter.Clear();
+                await stream.WriteAsync(item, cancellationToken).ConfigureAwait(false);
             }
-            while (!isFinalBlock);
-            await stream.FlushAsync().ConfigureAwait(false);
+            await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public ValueTask<string> WriteToUTF8StringAsync(T value, Options options, CancellationToken cancellationToken = default) => WriteToAsync<string>(value, options, i => ValueTask.FromResult(Encoding.UTF8.GetString(i.Span)), cancellationToken);
 
         public virtual async ValueTask<R> WriteToAsync<R>(T value, Options options, Func<ReadOnlyMemory<byte>, ValueTask<R>> convert, CancellationToken cancellationToken = default)
         {
-            bool isFinalBlock;
-            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            using var bufferWriter = new PooledBufferWriter<byte>(opt.BufferSize);
+            await foreach (var item in ContinueWriteAsync(opt, cancellationToken).ConfigureAwait(false))
             {
-                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+                var a = item;
+                var des = bufferWriter.GetMemory(a.Length);
+                a.CopyTo(des);
+                bufferWriter.Advance(a.Length);
             }
-            while (!isFinalBlock);
             return await convert(bufferWriter.WrittenMemory);
         }
 
         public virtual async ValueTask<byte[]> WriteToBytesAsync(T value, Options options, CancellationToken cancellationToken = default)
         {
-            bool isFinalBlock;
-            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            using var bufferWriter = new PooledBufferWriter<byte>(opt.BufferSize);
+            await foreach (var item in ContinueWriteAsync(opt, cancellationToken).ConfigureAwait(false))
             {
-                isFinalBlock = await ContinueWriteAsync(bufferWriter, opt, cancellationToken);
+                var a = item;
+                var des = bufferWriter.GetMemory(a.Length);
+                a.CopyTo(des);
+                bufferWriter.Advance(a.Length);
             }
-            while (!isFinalBlock);
             return bufferWriter.WrittenMemory.ToArray();
         }
 
         public virtual void Write(T value, Stream stream, Options options)
         {
-            bool isFinalBlock;
-            using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            foreach (var item in ContinueWrite(opt))
             {
-                isFinalBlock = ContinueWrite(bufferWriter, opt);
-                bufferWriter.WriteToStream(stream);
-                bufferWriter.Clear();
+                stream.Write(item.Span);
             }
-            while (!isFinalBlock);
             stream.Flush();
         }
 
         public virtual byte[] WriteToBytes(T value, Options options)
         {
-            bool isFinalBlock;
             using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            foreach (var item in ContinueWrite(opt))
             {
-                isFinalBlock = ContinueWrite(bufferWriter, opt);
+                var a = item.Span;
+                var des = bufferWriter.GetSpan(a.Length);
+                a.CopyTo(des);
+                bufferWriter.Advance(a.Length);
             }
-            while (!isFinalBlock);
             return bufferWriter.WrittenMemory.ToArray();
         }
 
@@ -220,24 +212,25 @@ namespace RuQu
 
         public virtual R WriteTo<R>(T value, Options options, Func<ReadOnlyMemory<byte>, R> convert)
         {
-            bool isFinalBlock;
             using var bufferWriter = new PooledBufferWriter<byte>(options.BufferSize);
             Options opt = (Options)options.CloneWriteOptionsWithValue(value);
-            do
+            foreach (var item in ContinueWrite(opt))
             {
-                isFinalBlock = ContinueWrite(bufferWriter, opt);
+                var a = item.Span;
+                var des = bufferWriter.GetSpan(a.Length);
+                a.CopyTo(des);
+                bufferWriter.Advance(a.Length);
             }
-            while (!isFinalBlock);
             return convert(bufferWriter.WrittenMemory);
         }
 
-        public virtual ValueTask<bool> ContinueWriteAsync(IBufferWriter<byte> writer, Options options, CancellationToken cancellationToken)
+        public virtual IAsyncEnumerable<ReadOnlyMemory<byte>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return ValueTask.FromResult(ContinueWrite(writer, options));
+            return ContinueWrite(options).ToAsyncEnumerable();
         }
 
-        public abstract bool ContinueWrite(IBufferWriter<byte> writer, Options options);
+        public abstract IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(Options options);
 
         #endregion Write
     }

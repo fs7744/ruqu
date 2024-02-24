@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace RuQu.UT
 {
     public class InputStringUT
@@ -61,6 +59,7 @@ namespace RuQu.UT
             var a = IniParser.Instance.Read(s, new IniParserOptions());
             Assert.Equal(2, a.Count);
             Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
+            var ss = IniParser.Instance.WriteToString(a, new IniParserOptions());
         }
     }
 }

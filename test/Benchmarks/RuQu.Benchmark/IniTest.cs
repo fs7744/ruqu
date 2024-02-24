@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using IniParser.Model;
 using IniParser.Parser;
 using Microsoft.Extensions.Configuration;
 
@@ -18,8 +19,16 @@ namespace RuQu.Benchmark
                 version = "1.1.2"
 
                 """;
-
+        private readonly IniConfig iniConfig;
+        private readonly IniData pdata;
+        private readonly IniParserOptions iniParserOptions = new IniParserOptions();
         IniDataParser parser = new IniDataParser();
+
+        public IniTest()
+        {
+            iniConfig = IniParser.Instance.Read(testdata, iniParserOptions);
+            pdata = parser.Parse(testdata);
+        }
 
         public static IDictionary<string, string?> Read(string content)
         {
@@ -80,21 +89,33 @@ namespace RuQu.Benchmark
 
 
         [Benchmark]
-        public void Hande_Ini()
+        public void Hande_Read_Ini()
         {
             Read(testdata);
         }
 
         [Benchmark]
-        public void RuQu_Ini()
+        public void RuQu_Read_Ini()
         {
             IniParser.Instance.Read(testdata, new IniParserOptions());
         }
 
         [Benchmark]
-        public void IniDataParser()
+        public void IniDataParser_Read()
         {
             parser.Parse(testdata);
+        }
+
+        [Benchmark]
+        public void RuQu_Write_Ini()
+        {
+            IniParser.Instance.WriteToString(iniConfig, iniParserOptions);
+        }
+
+        [Benchmark]
+        public void IniDataParser_Write()
+        {
+            pdata.ToString();
         }
     }
 }

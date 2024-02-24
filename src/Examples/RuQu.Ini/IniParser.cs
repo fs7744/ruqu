@@ -1,5 +1,4 @@
 ﻿using RuQu.Reader;
-using System.Buffers;
 
 namespace RuQu
 {
@@ -63,9 +62,23 @@ namespace RuQu
             return buffer.IsFinalBlock ? options.Config : null;
         }
 
-        public override bool ContinueWrite(IBufferWriter<char> writer, IniParserOptions options)
+        public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
         {
-            throw new NotImplementedException();
+            foreach (var item in options.WriteObject)
+            {
+                yield return "[".AsMemory();
+                yield return item.Key.AsMemory();
+                yield return "]".AsMemory();
+                yield return Environment.NewLine.AsMemory();
+
+                foreach (var c in item.Value)
+                {
+                    yield return c.Key.AsMemory();
+                    yield return "=".AsMemory();
+                    yield return c.Value.AsMemory();
+                    yield return Environment.NewLine.AsMemory();
+                }
+            }
         }
     }
 }
