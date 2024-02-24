@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	  <ProjectReference Include="..\..\..\src\Examples\RuQu.Csv\RuQu.Csv.csproj" />
 	  <ProjectReference Include="..\..\..\src\Examples\RuQu.HexColor\RuQu.HexColor.csproj" />
 	  <ProjectReference Include="..\..\..\src\Examples\RuQu.Ini\RuQu.Ini.csproj" />
   </ItemGroup>

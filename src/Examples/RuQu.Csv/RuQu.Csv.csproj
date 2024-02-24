@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\RuQu\RuQu.csproj" />
+  </ItemGroup>
+
 </Project>
