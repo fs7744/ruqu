@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
-    public unsafe class ReadOnlySpanReadBuffer<T> : IReadBuffer<T>
+    public unsafe struct ReadOnlySpanReadBuffer<T> : IReadBuffer<T>
     {
         internal void* _buffer;
         internal int _offset;

@@ -67,7 +67,7 @@ namespace RuQu
         private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
         private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
 
-        public override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
+        protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniParserOptions options)
         {
             foreach (var item in options.WriteObject)
             {

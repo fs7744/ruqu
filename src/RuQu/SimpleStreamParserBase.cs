@@ -224,13 +224,13 @@ namespace RuQu
             return convert(bufferWriter.WrittenMemory);
         }
 
-        public virtual IAsyncEnumerable<ReadOnlyMemory<byte>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
+        protected virtual IAsyncEnumerable<ReadOnlyMemory<byte>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return ContinueWrite(options).ToAsyncEnumerable();
         }
 
-        public abstract IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(Options options);
+        protected abstract IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(Options options);
 
         #endregion Write
     }

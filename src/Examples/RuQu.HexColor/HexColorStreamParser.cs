@@ -39,7 +39,7 @@ namespace RuQu
             buffer.IngoreUtf8Bom();
         }
 
-        public override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
+        protected override IEnumerable<ReadOnlyMemory<byte>> ContinueWrite(SimpleOptions<(byte red, byte green, byte blue)> options)
         {
             (byte red, byte green, byte blue) = options.WriteObject;
             yield return "#"u8.ToArray().AsMemory();

@@ -221,13 +221,13 @@ namespace RuQu
             return sb.ToString();
         }
 
-        public virtual IAsyncEnumerable<ReadOnlyMemory<char>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
+        protected virtual IAsyncEnumerable<ReadOnlyMemory<char>> ContinueWriteAsync(Options options, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return ContinueWrite(options).ToAsyncEnumerable();
         }
 
-        public abstract IEnumerable<ReadOnlyMemory<char>> ContinueWrite(Options options);
+        protected abstract IEnumerable<ReadOnlyMemory<char>> ContinueWrite(Options options);
 
         #endregion
     }
