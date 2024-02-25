@@ -19,6 +19,12 @@ namespace RuQu.Reader
             get => _buffer.AsSpan(_offset, _count - _offset);
         }
 
+        public int RemainingCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _count - _offset;
+        }
+
         public bool IsFinalBlock => _isFinalBlock;
 
         public ByteReadBuffer(Stream stream, int initialBufferSize)

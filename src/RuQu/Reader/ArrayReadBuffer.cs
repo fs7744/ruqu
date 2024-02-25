@@ -18,6 +18,12 @@ namespace RuQu.Reader
             get => _buffer.AsSpan(_offset, _buffer.Length - _offset);
         }
 
+        public int RemainingCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _buffer.Length - _offset;
+        }
+
         public bool IsFinalBlock
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
