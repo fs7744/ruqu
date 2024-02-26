@@ -1,3 +1,5 @@
+using RuQu.Reader;
+
 namespace RuQu.UT
 {
     public class InputStringUT
@@ -5,14 +7,14 @@ namespace RuQu.UT
         [Fact]
         public void HexColorTest()
         {
-            (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
+            (byte red, byte green, byte blue) = HexColor.CharParser.Read("#2F14DF");
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);
             var a = HexColor.StreamParser.WriteToBytes((red, green, blue));
             using Stream stream = new MemoryStream(a);
             stream.Seek(0, SeekOrigin.Begin);
-            (red, green, blue) = HexColor.ParseStream(stream);
+            (red, green, blue) = HexColor.StreamParser.Read(stream);
             Assert.Equal(47, red);
             Assert.Equal(20, green);
             Assert.Equal(223, blue);

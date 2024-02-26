@@ -7,47 +7,20 @@ RuQu just a parse helper lib, it want to be high performance, but the code maybe
 ## HexColor String Parse Example
 
 ``` csharp
-public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue), NoneReadState>
+public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, byte blue)>
 {
-    public HexColorStreamParser()
+    public HexColorCharParser()
     {
         BufferSize = 8;
     }
 
-    protected override NoneReadState InitReadState()
+    protected override (byte red, byte green, byte blue) Read(IReaderBuffer<char> buffer)
     {
-        return null;
-    }
-
-    protected override (byte red, byte green, byte blue) ContinueRead(IReadBuffer<char> buffer, ref NoneReadState state)
-    {
-        var bytes = buffer.Remaining;
-        if (bytes.Length > 7)
-        {
-            throw new FormatException("Only 7 utf-8 chars");
-        }
-
-        if (!buffer.IsFinalBlock && bytes.Length < 7)
-        {
-            buffer.AdvanceBuffer(0);
-            return default;
-        }
-
-        if (buffer.IsFinalBlock && bytes.Length < 7)
-        {
-            throw new FormatException("Must 7 utf-8 chars");
-        }
-
-        if (bytes[0] is not '#')
-        {
-            throw new FormatException("No perfix with #");
-        }
-
-        var c = new string(bytes[1..]);
-
+        buffer.Tag('#');
+        var c = buffer.AsciiHexDigit(6).ToString();
+        buffer.Eof();
         return (Convert.ToByte(c[0..2], 16), Convert.ToByte(c[2..4], 16), Convert.ToByte(c[4..6], 16));
     }
-
 
     private static readonly ReadOnlyMemory<char> Tag = "#".AsMemory();
 
@@ -64,29 +37,29 @@ public class HexColorCharParser : SimpleCharParserBase<(byte red, byte green, by
 
 ```
 
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.22000.2538/21H2/SunValley)
-Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3155/23H2/2023Update/SunValley3)
+13th Gen Intel Core i9-13900KF, 1 CPU, 32 logical and 24 physical cores
 .NET SDK 8.0.200
   [Host]     : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
   DefaultJob : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
 
 
 ```
+| Method                      | Mean      | Error    | StdDev   | Gen0   | Gen1   | Allocated |
+|---------------------------- |----------:|---------:|---------:|-------:|-------:|----------:|
+| Hande_HexColor              |  26.35 ns | 0.080 ns | 0.075 ns | 0.0051 |      - |      96 B |
+| RuQu_HexColor               |  43.51 ns | 0.210 ns | 0.186 ns | 0.0089 |      - |     168 B |
+| RuQu_HexColor_Stream        |  82.63 ns | 0.879 ns | 0.779 ns | 0.0101 |      - |     192 B |
+| RuQu_HexColor_WriteToString |  37.34 ns | 0.675 ns | 0.632 ns | 0.0136 |      - |     256 B |
+| Superpower_HexColor         | 320.00 ns | 4.630 ns | 4.331 ns | 0.0424 |      - |     800 B |
+| Pidgin_HexColor             | 143.35 ns | 0.979 ns | 0.868 ns | 0.0186 |      - |     352 B |
+| Sprache_HexColor            | 323.23 ns | 2.526 ns | 2.362 ns | 0.1564 | 0.0005 |    2944 B |
 
-| Method                      | Mean      | Error     | StdDev    | Median    | Gen0   | Gen1   | Allocated |
-|---------------------------- |----------:|----------:|----------:|----------:|-------:|-------:|----------:|
-| Hande_HexColor              |  46.20 ns |  0.730 ns |  0.609 ns |  46.21 ns | 0.0114 |      - |      96 B |
-| RuQu_HexColor               |  62.77 ns |  1.252 ns |  1.671 ns |  62.52 ns | 0.0229 |      - |     192 B |
-| RuQu_HexColor_Stream        | 125.64 ns |  2.276 ns |  2.129 ns | 125.75 ns | 0.0248 |      - |     208 B |
-| RuQu_HexColor_WriteToString |  65.45 ns |  1.333 ns |  3.626 ns |  64.39 ns | 0.0315 |      - |     264 B |
-| Superpower_HexColor         | 464.40 ns |  9.186 ns |  7.671 ns | 461.79 ns | 0.0954 |      - |     800 B |
-| Pidgin_HexColor             | 282.57 ns |  3.472 ns |  3.248 ns | 282.52 ns | 0.0420 |      - |     352 B |
-| Sprache_HexColor            | 643.78 ns | 12.498 ns | 21.558 ns | 645.83 ns | 0.3519 | 0.0010 |    2944 B |
 
 ## Ini Char Parse Example
 
 ``` csharp
-public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
+public class IniParser : SimpleCharParserBase<IniConfig>
 {
     public static readonly IniParser Instance = new IniParser();
 
@@ -95,24 +68,14 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
     private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
     private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
 
-
-    protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, ref IniParserReadState state)
+    protected override IniConfig? Read(IReaderBuffer<char> buffer)
     {
-        int count;
-        var total = 0;
-        do
+        var config = new IniConfig();
+        IniSection section = null;
+        while (buffer.Line(out var rawLine))
         {
-            count = buffer.ReadLine(out var rawLine);
-            total += count;
-            if (count == 0 && buffer.IsFinalBlock)
-            {
-                rawLine = buffer.Remaining;
-                total += rawLine.Length;
-            }
             var line = rawLine.Trim();
-
             // Ignore blank lines
-
             if (line.IsEmpty || line.IsWhiteSpace())
             {
                 continue;
@@ -126,8 +89,8 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
             if (line[0] == '[' && line[^1] == ']')
             {
                 // remove the brackets
-                state.Section = new IniSection();
-                state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
+                section = new IniSection();
+                config.Add(line[1..^1].Trim().ToString(), section);
                 continue;
             }
 
@@ -147,14 +110,9 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
                 value = value[1..^1];
             }
 
-            state.Section[key] = value.ToString();
-        } while (count > 0);
-        return buffer.IsFinalBlock ? state.Config : null;
-    }
-
-    protected override IniParserReadState InitReadState()
-    {
-        return new IniParserReadState();
+            section[key] = value.ToString();
+        }
+        return config;
     }
 
     protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniConfig value)
@@ -182,19 +140,18 @@ public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
 
 ```
 
-BenchmarkDotNet v0.13.12, Windows 11 (10.0.22000.2538/21H2/SunValley)
-Intel Core i7-10700 CPU 2.90GHz, 1 CPU, 16 logical and 8 physical cores
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3155/23H2/2023Update/SunValley3)
+13th Gen Intel Core i9-13900KF, 1 CPU, 32 logical and 24 physical cores
 .NET SDK 8.0.200
   [Host]     : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
   DefaultJob : .NET 8.0.2 (8.0.224.6711), X64 RyuJIT AVX2
 
 
 ```
-
-| Method              | Mean       | Error    | StdDev    | Median     | Gen0   | Gen1   | Allocated |
-|-------------------- |-----------:|---------:|----------:|-----------:|-------:|-------:|----------:|
-| Hande_Read_Ini      |   536.0 ns |  8.89 ns |   7.88 ns |   537.1 ns | 0.2136 |      - |   1.75 KB |
-| RuQu_Read_Ini       |   481.5 ns |  9.21 ns |  11.65 ns |   480.7 ns | 0.1326 |      - |   1.09 KB |
-| IniDataParser_Read  | 4,489.1 ns | 79.28 ns | 148.91 ns | 4,451.8 ns | 0.8392 | 0.0076 |   6.91 KB |
-| RuQu_Write_Ini      |   799.7 ns | 24.96 ns |  69.98 ns |   774.4 ns | 1.0347 | 0.0315 |   8.45 KB |
-| IniDataParser_Write | 1,241.5 ns | 19.97 ns |  17.70 ns | 1,244.6 ns | 0.2441 |      - |   2.01 KB |
+| Method              | Mean       | Error    | StdDev   | Gen0   | Gen1   | Allocated |
+|-------------------- |-----------:|---------:|---------:|-------:|-------:|----------:|
+| Hande_Read_Ini      |   290.2 ns |  2.92 ns |  2.73 ns | 0.0949 |      - |    1792 B |
+| RuQu_Read_Ini       |   292.3 ns |  2.04 ns |  1.90 ns | 0.0548 |      - |    1032 B |
+| IniDataParser_Read  | 2,390.6 ns | 15.42 ns | 14.42 ns | 0.3738 | 0.0038 |    7080 B |
+| RuQu_Write_Ini      |   289.8 ns |  3.76 ns |  3.14 ns | 0.0491 |      - |     928 B |
+| IniDataParser_Write |   637.3 ns |  5.38 ns |  5.03 ns | 0.1087 |      - |    2056 B |

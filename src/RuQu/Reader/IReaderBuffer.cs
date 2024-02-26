@@ -1,16 +1,20 @@
 ﻿namespace RuQu.Reader
 {
-    public interface IReaderBuffer<T> : IDisposable
+    public interface IReaderBuffer<T> : IDisposable where T : struct
     {
         public int ConsumedCount { get; }
         public int Index { get; }
-        //public ReadOnlySpan<char> Readed { get; }
+        public ReadOnlySpan<T> Readed { get; }
         public bool IsEOF { get; }
-        //public T this[int index] { get; }
+
         public void Consume(int count);
 
-        public ReadOnlySpan<T> Peek(int count);
+        public bool Peek(int count, out ReadOnlySpan<T> data);
 
-        public ValueTask<ReadOnlyMemory<T>> PeekAsync(int count, CancellationToken cancellationToken);
+        public bool Peek(out T data);
+
+        public ValueTask<ReadOnlyMemory<T>?> PeekAsync(int count, CancellationToken cancellationToken = default);
+
+        public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default);
     }
 }

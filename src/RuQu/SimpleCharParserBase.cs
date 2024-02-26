@@ -3,7 +3,7 @@ using System.Text;
 
 namespace RuQu
 {
-    public abstract class SimpleCharParserBase<T, ReadState>
+    public abstract class SimpleCharParserBase<T>
     {
         public int BufferSize { get; set; } = 256;
 
@@ -11,20 +11,10 @@ namespace RuQu
 
         public virtual async ValueTask<T?> ReadAsync(TextReader reader, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> buffer = new CharReadBuffer(reader, BufferSize);
-            var state = InitReadState();
+            IReaderBuffer<char> buffer = new TextReaderBuffer(reader, BufferSize);
             try
             {
-                while (true)
-                {
-                    buffer = await buffer.ReadNextBufferAsync(cancellationToken).ConfigureAwait(false);
-                    T? value = await ContinueReadAsync(buffer, ref state, cancellationToken).ConfigureAwait(false);
-
-                    if (buffer.IsFinalBlock)
-                    {
-                        return value;
-                    }
-                }
+                return await ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -42,46 +32,56 @@ namespace RuQu
             return ReadAsync(new StreamReader(stream, encoding, bufferSize: BufferSize), cancellationToken);
         }
 
-        public virtual ValueTask<T?> ReadAsync(string content, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<T?> ReadAsync(string content, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> buffer = new StringReadBuffer(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
+            IReaderBuffer<char> buffer = new StringReaderBuffer(content);
+            try
+            {
+                return await ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
         }
 
-        public virtual ValueTask<T?> ReadAsync(char[] content, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<T?> ReadAsync(char[] content, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
+            IReaderBuffer<char> buffer = new ArrayReaderBuffer<char>(content);
+            try
+            {
+                return await ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
         }
 
-        public virtual ValueTask<T?> ReadAsync(Span<char> content, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<T?> ReadAsync(Memory<char> content, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
+            IReaderBuffer<char> buffer = new ReadOnlyMemoryReaderBuffer<char>(content);
+            try
+            {
+                return await ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
         }
 
-        public virtual ValueTask<T?> ReadAsync(ReadOnlySpan<char> content, CancellationToken cancellationToken = default)
+        public virtual async ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, CancellationToken cancellationToken = default)
         {
-            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
-        }
-
-        public virtual ValueTask<T?> ReadAsync(Memory<char> content, CancellationToken cancellationToken = default)
-        {
-            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
-        }
-
-        public virtual ValueTask<T?> ReadAsync(ReadOnlyMemory<char> content, CancellationToken cancellationToken = default)
-        {
-            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueReadAsync(buffer, ref state, cancellationToken);
+            IReaderBuffer<char> buffer = new ReadOnlyMemoryReaderBuffer<char>(content);
+            try
+            {
+                return await ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
         }
 
         public virtual T? Read(Stream stream)
@@ -96,62 +96,10 @@ namespace RuQu
 
         public virtual T? Read(string content)
         {
-            IReadBuffer<char> buffer = new StringReadBuffer(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(char[] content)
-        {
-            IReadBuffer<char> buffer = new ArrayReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(Span<char> content)
-        {
-            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(ReadOnlySpan<char> content)
-        {
-            IReadBuffer<char> buffer = new ReadOnlySpanReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(Memory<char> content)
-        {
-            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(ReadOnlyMemory<char> content)
-        {
-            IReadBuffer<char> buffer = new ReadOnlyMemoryReadBuffer<char>(content);
-            var state = InitReadState();
-            return ContinueRead(buffer, ref state);
-        }
-
-        public virtual T? Read(TextReader reader)
-        {
-            IReadBuffer<char> buffer = new CharReadBuffer(reader, BufferSize);
-            var state = InitReadState();
+            var buffer = new StringReaderBuffer(content);
             try
             {
-                while (true)
-                {
-                    buffer.ReadNextBuffer();
-                    T? value = ContinueRead(buffer, ref state);
-
-                    if (buffer.IsFinalBlock)
-                    {
-                        return value;
-                    }
-                }
+                return Read(buffer);
             }
             finally
             {
@@ -159,15 +107,91 @@ namespace RuQu
             }
         }
 
-        protected virtual ValueTask<T?> ContinueReadAsync(IReadBuffer<char> buffer, ref ReadState state, CancellationToken cancellationToken)
+        public virtual T? Read(char[] content)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            return ValueTask.FromResult(ContinueRead(buffer, ref state));
+            var buffer = new ArrayReaderBuffer<char>(content);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
         }
 
-        protected abstract T? ContinueRead(IReadBuffer<char> buffer, ref ReadState state);
+        public virtual T? Read(Span<char> content)
+        {
+            var buffer = new ReadOnlySpanReaderBuffer<char>(content);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
 
-        protected abstract ReadState InitReadState();
+        public virtual T? Read(ReadOnlySpan<char> content)
+        {
+            var buffer = new ReadOnlySpanReaderBuffer<char>(content);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        public virtual T? Read(Memory<char> content)
+        {
+            var buffer = new ReadOnlyMemoryReaderBuffer<char>(content);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        public virtual T? Read(ReadOnlyMemory<char> content)
+        {
+            var buffer = new ReadOnlyMemoryReaderBuffer<char>(content);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        public virtual T? Read(TextReader reader)
+        {
+            var buffer = new TextReaderBuffer(reader, BufferSize);
+            try
+            {
+                return Read(buffer);
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        protected virtual ValueTask<T?> ReadAsync(IReaderBuffer<char> buffer, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(Read(buffer));
+        }
+
+        protected abstract T? Read(IReaderBuffer<char> buffer);
 
         #endregion Read
 

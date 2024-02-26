@@ -2,6 +2,7 @@
 using IniParser.Model;
 using IniParser.Parser;
 using Microsoft.Extensions.Configuration;
+using RuQu.Reader;
 
 namespace RuQu.Benchmark
 {

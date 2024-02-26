@@ -43,14 +43,14 @@ namespace RuQu.Benchmark
         [Benchmark]
         public void RuQu_HexColor()
         {
-            (byte red, byte green, byte blue) = HexColor.Parse("#2F14DF");
+            (byte red, byte green, byte blue) = HexColor.CharParser.Read("#2F14DF");
         }
 
         [Benchmark]
         public void RuQu_HexColor_Stream()
         {
             stream.Seek(0, SeekOrigin.Begin);
-            (byte red, byte green, byte blue) = HexColor.ParseStream(stream);
+            (byte red, byte green, byte blue) = HexColor.StreamParser.Read(stream);
         }
 
         [Benchmark]

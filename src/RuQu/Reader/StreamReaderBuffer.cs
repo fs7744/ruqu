@@ -3,18 +3,18 @@ using System.Runtime.CompilerServices;
 
 namespace RuQu.Reader
 {
-    public class TextReaderBuffer : IReaderBuffer<char>
+    public class StreamReaderBuffer : IReaderBuffer<byte>
     {
-        internal char[] _buffer;
+        internal byte[] _buffer;
         internal int _offset;
         internal int _count;
         internal int _maxCount;
         internal int _consumedCount;
-        private TextReader _reader;
+        private Stream _reader;
         private bool _isFinalBlock;
         private bool _isReaded;
 
-        public ReadOnlySpan<char> Readed
+        public ReadOnlySpan<byte> Readed
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -46,13 +46,13 @@ namespace RuQu.Reader
             get => _offset;
         }
 
-        public TextReaderBuffer(TextReader reader, int initialBufferSize)
+        public StreamReaderBuffer(Stream reader, int initialBufferSize)
         {
             if (initialBufferSize <= 0)
             {
                 initialBufferSize = 256;
             }
-            _buffer = ArrayPool<char>.Shared.Rent(initialBufferSize);
+            _buffer = ArrayPool<byte>.Shared.Rent(initialBufferSize);
             _consumedCount = _count = _offset = 0;
             _reader = reader;
         }
@@ -69,20 +69,20 @@ namespace RuQu.Reader
             if (remaining > (_buffer.Length / 2) && _buffer.Length != int.MaxValue)
             {
                 // We have less than half the buffer available, double the buffer size.
-                char[] oldBuffer = _buffer;
+                byte[] oldBuffer = _buffer;
                 int oldMaxCount = _maxCount;
                 var newSize = (_buffer.Length < (int.MaxValue / 2)) ? _buffer.Length * 2 : int.MaxValue;
                 while (newSize < count)
                 {
                     newSize *= (newSize < (int.MaxValue / 2)) ? newSize * 2 : int.MaxValue;
                 }
-                char[] newBuffer = ArrayPool<char>.Shared.Rent(newSize);
+                byte[] newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
                 // Copy the unprocessed data to the new buffer while shifting the processed bytes.
                 Buffer.BlockCopy(oldBuffer, _offset, newBuffer, 0, _count - _offset);
                 _buffer = newBuffer;
                 // Clear and return the old buffer
-                new Span<char>(oldBuffer, 0, oldMaxCount).Clear();
-                ArrayPool<char>.Shared.Return(oldBuffer);
+                new Span<byte>(oldBuffer, 0, oldMaxCount).Clear();
+                ArrayPool<byte>.Shared.Return(oldBuffer);
                 _maxCount = _count;
                 _count -= _offset;
                 _offset = 0;
@@ -100,14 +100,14 @@ namespace RuQu.Reader
         {
             if (_buffer != null)
             {
-                new Span<char>(_buffer, 0, _maxCount).Clear();
-                char[] toReturn = _buffer;
-                ArrayPool<char>.Shared.Return(toReturn);
+                new Span<byte>(_buffer, 0, _maxCount).Clear();
+                byte[] toReturn = _buffer;
+                ArrayPool<byte>.Shared.Return(toReturn);
                 _buffer = null!;
             }
         }
 
-        public bool Peek(int count, out ReadOnlySpan<char> data)
+        public bool Peek(int count, out ReadOnlySpan<byte> data)
         {
             if (!_isReaded)
             {
@@ -127,7 +127,7 @@ namespace RuQu.Reader
             return true;
         }
 
-        public bool Peek(out char data)
+        public bool Peek(out byte data)
         {
             if (!_isReaded)
             {
@@ -197,7 +197,7 @@ namespace RuQu.Reader
             }
         }
 
-        public async ValueTask<ReadOnlyMemory<char>?> PeekAsync(int count, CancellationToken cancellationToken = default)
+        public async ValueTask<ReadOnlyMemory<byte>?> PeekAsync(int count, CancellationToken cancellationToken = default)
         {
             if (!_isReaded)
             {
@@ -215,7 +215,7 @@ namespace RuQu.Reader
             return _buffer.AsMemory(_offset, count);
         }
 
-        public async ValueTask<char?> PeekAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<byte?> PeekAsync(CancellationToken cancellationToken = default)
         {
             if (!_isReaded)
             {

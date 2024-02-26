@@ -2,7 +2,7 @@
 
 namespace RuQu
 {
-    public class IniParser : SimpleCharParserBase<IniConfig, IniParserReadState>
+    public class IniParser : SimpleCharParserBase<IniConfig>
     {
         public static readonly IniParser Instance = new IniParser();
 
@@ -11,24 +11,14 @@ namespace RuQu
         private static readonly ReadOnlyMemory<char> SectionEnd = "]".AsMemory();
         private static readonly ReadOnlyMemory<char> Separator = "=".AsMemory();
 
-
-        protected override IniConfig? ContinueRead(IReadBuffer<char> buffer, ref IniParserReadState state)
+        protected override IniConfig? Read(IReaderBuffer<char> buffer)
         {
-            int count;
-            var total = 0;
-            do
+            var config = new IniConfig();
+            IniSection section = null;
+            while (buffer.Line(out var rawLine))
             {
-                count = buffer.ReadLine(out var rawLine);
-                total += count;
-                if (count == 0 && buffer.IsFinalBlock)
-                {
-                    rawLine = buffer.Remaining;
-                    total += rawLine.Length;
-                }
                 var line = rawLine.Trim();
-
                 // Ignore blank lines
-
                 if (line.IsEmpty || line.IsWhiteSpace())
                 {
                     continue;
@@ -42,8 +32,8 @@ namespace RuQu
                 if (line[0] == '[' && line[^1] == ']')
                 {
                     // remove the brackets
-                    state.Section = new IniSection();
-                    state.Config.Add(line[1..^1].Trim().ToString(), state.Section);
+                    section = new IniSection();
+                    config.Add(line[1..^1].Trim().ToString(), section);
                     continue;
                 }
 
@@ -63,14 +53,9 @@ namespace RuQu
                     value = value[1..^1];
                 }
 
-                state.Section[key] = value.ToString();
-            } while (count > 0);
-            return buffer.IsFinalBlock ? state.Config : null;
-        }
-
-        protected override IniParserReadState InitReadState()
-        {
-            return new IniParserReadState();
+                section[key] = value.ToString();
+            }
+            return config;
         }
 
         protected override IEnumerable<ReadOnlyMemory<char>> ContinueWrite(IniConfig value)
