@@ -94,5 +94,9 @@ namespace RuQu.Reader
             }
             return ValueTask.FromResult<T?>(_buffer.Span[_offset]);
         }
+
+        public bool ReadNextBuffer(int count) => false;
+
+        public ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool>(false);
     }
 }

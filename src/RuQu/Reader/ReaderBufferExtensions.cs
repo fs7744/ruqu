@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Reflection.PortableExecutable;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace RuQu.Reader
 {
@@ -34,6 +36,20 @@ namespace RuQu.Reader
             }
 
             throw new ParseException($"Expect {tag} at {buffer.Index} but got {t}");
+        }
+
+        public static bool OptionTag<T>(this IReaderBuffer<T> buffer, T tag) where T : struct, IEquatable<T>
+        {
+            if (buffer.Peek(out var t))
+            {
+                if (tag.Equals(t))
+                {
+                    buffer.Consume(1);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static ReadOnlySpan<char> AsciiHexDigit(this IReaderBuffer<char> buffer, int count)
@@ -96,10 +112,32 @@ namespace RuQu.Reader
                 {
                     charPos += remaining.Length;
                 }
-            } while (buffer.Peek(len + 1, out var _));
+            } while (buffer.ReadNextBuffer(len));
             line = remaining;
             buffer.Consume(len);
             return true;
+        }
+
+        public static bool IngoreCRLF(this IReaderBuffer<char> buffer)
+        {
+            if (buffer.Peek(out var c))
+            {
+                if (c is '\r')
+                {
+                    buffer.Consume(1);
+                    if (!buffer.Peek(out c))
+                    {
+                        return true;
+                    }
+                }
+
+                if (c is '\n')
+                {
+                    buffer.Consume(1);
+                }
+                return true;
+            }
+            return false;
         }
 
         public static void Eof<T>(this IReaderBuffer<T> buffer) where T : struct

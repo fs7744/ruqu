@@ -147,9 +147,9 @@ namespace RuQu.Reader
             return true;
         }
 
-        private void ReadNextBuffer(int count)
+        public bool ReadNextBuffer(int count)
         {
-            if (count + _offset > _count)
+            if (!_isFinalBlock && count + _offset > _count)
             {
                 AdvanceBuffer(count);
                 do
@@ -169,12 +169,14 @@ namespace RuQu.Reader
                 {
                     _maxCount = _count;
                 }
+                return true;
             }
+            return false;
         }
 
-        private async ValueTask ReadNextBufferAsync(int count, CancellationToken cancellationToken = default)
+        public async ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default)
         {
-            if (count + _offset > _count)
+            if (!_isFinalBlock && count + _offset > _count)
             {
                 AdvanceBuffer(count);
                 do
@@ -194,7 +196,9 @@ namespace RuQu.Reader
                 {
                     _maxCount = _count;
                 }
+                return true;
             }
+            return false;
         }
 
         public async ValueTask<ReadOnlyMemory<byte>?> PeekAsync(int count, CancellationToken cancellationToken = default)

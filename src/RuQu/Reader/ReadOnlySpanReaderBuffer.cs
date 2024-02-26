@@ -87,5 +87,9 @@ namespace RuQu.Reader
         {
             throw new NotSupportedException();
         }
+
+        public bool ReadNextBuffer(int count) => false;
+
+        public ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool>(false);
     }
 }
