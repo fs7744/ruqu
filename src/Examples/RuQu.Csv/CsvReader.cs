@@ -1,8 +1,74 @@
 ﻿using RuQu.Reader;
-using System;
+using System.Text;
 
 namespace RuQu.Csv
 {
+    public class CsvReader : TextDataReader<string[]>
+    {
+        public CsvReader(string content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(char[] content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(ReadOnlyMemory<char> content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(Memory<char> content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(ReadOnlySpan<char> content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(Span<char> content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(Stream stream, int bufferSize = 256, char separater = ',', bool fristIsHeader = false) : base(stream, bufferSize)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(TextReader reader, int bufferSize = 256, char separater = ',', bool fristIsHeader = false) : base(reader, bufferSize)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvReader(Stream stream, Encoding encoding, int bufferSize = 256, char separater = ',', bool fristIsHeader = false) : base(stream, encoding, bufferSize)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public char Separater { get; private set; } = ',';
+
+        public bool HasHeader { get; private set; }
+
+        public override bool MoveNext()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     //public class CsvReader : TextDataReader<string[]>
     //{
     //    public CsvReader(TextReader reader, int bufferSize) : base(reader, bufferSize)
