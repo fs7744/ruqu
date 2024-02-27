@@ -128,72 +128,7 @@ namespace RuQu.Csv
             } while (reader.ReadNextBuffer(len));
             s = reader.Readed.ToString();
             return true;
-            //int charPos = 0;
-            //int len;
-            //ReadOnlySpan<char> remaining;
-            //do
-            //{
-            //    remaining = reader.Readed;
-            //    len = remaining.Length;
-            //    var charBufferSpan = remaining[charPos..];
-            //    var i = charBufferSpan.IndexOf('"');
-            //    if (i >= 0)
-            //    {
-            //        if (i + 1 >= remaining.Length)
-            //        {
-            //            if (reader.ReadNextBuffer(len))
-            //            {
-            //                continue;
-            //            }
-            //            else
-            //            {
-            //                s = remaining[..(charPos + i)].ToString();
-            //                return true;
-            //            }
-            //        }
-            //        if (remaining[i + 1] is '"')
-            //        {
-            //            charPos += i + 2;
-            //            continue;
-            //        }
-            //        s = remaining[..(charPos + i)].ToString();
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        charPos += remaining.Length;
-            //    }
-            //}
-            //while (reader.ReadNextBuffer(len));
-            //throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
         }
-
-        //private bool TakeField(out string s)
-        //{
-        //    int charPos = 0;
-        //    int len;
-        //    ReadOnlySpan<char> remaining;
-        //    do
-        //    {
-        //        remaining = reader.Readed;
-        //        len = remaining.Length;
-        //        var charBufferSpan = remaining[charPos..];
-        //        var i = charBufferSpan.IndexOf(Separater);
-        //        if (i >= 0)
-        //        {
-        //            charPos += i;
-        //            s = remaining[..charPos].ToString();
-        //            reader.Consume(charPos);
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            charPos += remaining.Length;
-        //        }
-        //    }
-        //    while (reader.ReadNextBuffer(len));
-        //    throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
-        //}
 
         private bool ProcessField(out string? f)
         {
