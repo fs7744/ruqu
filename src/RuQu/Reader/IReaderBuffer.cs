@@ -13,6 +13,8 @@
 
         public bool Peek(out T data);
 
+        public bool PeekByOffset(int offset, out T data);
+
         public ValueTask<ReadOnlyMemory<T>?> PeekAsync(int count, CancellationToken cancellationToken = default);
 
         public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default);

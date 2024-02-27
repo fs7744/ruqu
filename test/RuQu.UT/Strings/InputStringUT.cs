@@ -1,4 +1,4 @@
-using RuQu.Reader;
+using RuQu.Csv;
 
 namespace RuQu.UT
 {
@@ -66,6 +66,22 @@ namespace RuQu.UT
             Assert.Equal(2, a.Count);
             Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
             var ss = IniParser.Instance.WriteToString(a);
+        }
+
+        [Fact]
+        public unsafe void CSVParseTest()
+        {
+            var s = """
+                a,b
+                1,2
+                3sss,3333
+                """;
+
+            using var reader = new CsvReader(s, fristIsHeader: true);
+            var d = reader.ToArray();
+            Assert.Equal(2, reader.Header.Length);
+            Assert.Equal(2, d.Length);
+            Assert.Equal(4, d.SelectMany(i => i).Count());
         }
     }
 }

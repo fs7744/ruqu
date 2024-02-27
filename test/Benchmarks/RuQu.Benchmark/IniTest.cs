@@ -2,7 +2,6 @@
 using IniParser.Model;
 using IniParser.Parser;
 using Microsoft.Extensions.Configuration;
-using RuQu.Reader;
 
 namespace RuQu.Benchmark
 {
@@ -20,9 +19,10 @@ namespace RuQu.Benchmark
                 version = "1.1.2"
 
                 """;
+
         private readonly IniConfig iniConfig;
         private readonly IniData pdata;
-        IniDataParser parser = new IniDataParser();
+        private IniDataParser parser = new IniDataParser();
 
         public IniTest()
         {
@@ -86,7 +86,6 @@ namespace RuQu.Benchmark
             }
             return data;
         }
-
 
         [Benchmark]
         public void Hande_Read_Ini()

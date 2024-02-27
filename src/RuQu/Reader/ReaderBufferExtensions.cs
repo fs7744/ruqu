@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection.PortableExecutable;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace RuQu.Reader
 {
@@ -76,6 +74,67 @@ namespace RuQu.Reader
             return t;
         }
 
+        public static int IndexOfAny<T>(this IReaderBuffer<T> buffer, T value0, T value1, T value2) where T : struct, IEquatable<T>?
+        {
+            if (buffer.IsEOF)
+            {
+                return -1;
+            }
+            if (buffer is IFixedReaderBuffer<T> fixedReaderBuffer)
+            {
+                return fixedReaderBuffer.Readed.IndexOfAny(value0, value1, value2);
+            }
+            int pos = 0;
+            int len;
+            do
+            {
+                var r = buffer.Readed;
+                len = r.Length;
+                var charBufferSpan = r[pos..];
+                int idxOf = charBufferSpan.IndexOfAny(value0, value1, value2);
+                if (idxOf >= 0)
+                {
+                    return idxOf + pos;
+                }
+                else
+                {
+                    pos += charBufferSpan.Length;
+                }
+            } while (buffer.ReadNextBuffer(len));
+            return -1;
+        }
+
+
+        public static int IndexOf<T>(this IReaderBuffer<T> buffer, T value) where T : struct, IEquatable<T>?
+        {
+            if (buffer.IsEOF)
+            {
+                return -1;
+            }
+            if (buffer is IFixedReaderBuffer<T> fixedReaderBuffer)
+            {
+                return fixedReaderBuffer.Readed.IndexOf(value);
+            }
+            int pos = 0;
+            int len;
+            do
+            {
+                var r = buffer.Readed;
+                len = r.Length;
+                var charBufferSpan = r[pos..];
+                int idxOf = charBufferSpan.IndexOf(value);
+                if (idxOf >= 0)
+                {
+                    return idxOf + pos;
+                }
+                else
+                {
+                    pos += charBufferSpan.Length;
+                }
+            } while (buffer.ReadNextBuffer(len));
+            return -1;
+        }
+
         public static bool Line(this IReaderBuffer<char> buffer, out ReadOnlySpan<char> line)
         {
             if (buffer.IsEOF)
@@ -83,6 +142,33 @@ namespace RuQu.Reader
                 line = default;
                 return false;
             }
+            if (buffer is IFixedReaderBuffer<char> fixedReaderBuffer)
+            {
+                var charBufferSpan = fixedReaderBuffer.Readed;
+                int idxOfNewline = charBufferSpan.IndexOfAny('\r', '\n');
+                if (idxOfNewline >= 0)
+                {
+                    line = charBufferSpan[..idxOfNewline];
+                    char ch = charBufferSpan[idxOfNewline];
+                    if (ch == '\r')
+                    {
+                        var pos = idxOfNewline + 1;
+                        if ((uint)pos < (uint)charBufferSpan.Length && charBufferSpan[pos] == '\n')
+                        {
+                            idxOfNewline++;
+                        }
+                    }
+                    buffer.Consume(idxOfNewline + 1);
+                    return true;
+                }
+                else
+                {
+                    line = charBufferSpan;
+                    buffer.Consume(charBufferSpan.Length);
+                    return true;
+                }
+            }
+
             int charPos = 0;
             int len;
             ReadOnlySpan<char> remaining;
@@ -122,20 +208,23 @@ namespace RuQu.Reader
         {
             if (buffer.Peek(out var c))
             {
+                var r = false;
                 if (c is '\r')
                 {
+                    r = true;
                     buffer.Consume(1);
                     if (!buffer.Peek(out c))
                     {
-                        return true;
+                        return r;
                     }
                 }
 
                 if (c is '\n')
                 {
+                    r = true;
                     buffer.Consume(1);
                 }
-                return true;
+                return r;
             }
             return false;
         }

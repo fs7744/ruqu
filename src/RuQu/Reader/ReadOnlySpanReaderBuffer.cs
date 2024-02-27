@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
-    public unsafe struct ReadOnlySpanReaderBuffer<T> : IReaderBuffer<T> where T : struct
+    public unsafe struct ReadOnlySpanReaderBuffer<T> : IFixedReaderBuffer<T> where T : struct
     {
         internal void* _buffer;
         internal int _offset;
@@ -75,6 +75,18 @@ namespace RuQu.Reader
                 return false;
             }
             data = new ReadOnlySpan<T>(_buffer, _length)[_offset];
+            return true;
+        }
+
+        public bool PeekByOffset(int offset, out T data)
+        {
+            var o = _offset + offset;
+            if (o >= _length)
+            {
+                data = default;
+                return false;
+            }
+            data = new ReadOnlySpan<T>(_buffer, _length)[o];
             return true;
         }
 

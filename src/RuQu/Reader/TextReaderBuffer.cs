@@ -147,6 +147,27 @@ namespace RuQu.Reader
             return true;
         }
 
+        public bool PeekByOffset(int offset, out char data)
+        {
+            var o = offset + 1;
+            if (!_isReaded)
+            {
+                ReadNextBuffer(o);
+                _isReaded = true;
+            }
+            if (!_isFinalBlock)
+            {
+                ReadNextBuffer(o);
+            }
+            if (_offset >= _count)
+            {
+                data = default;
+                return false;
+            }
+            data = _buffer[o];
+            return true;
+        }
+
         public bool ReadNextBuffer(int count)
         {
             if (!_isFinalBlock && count + _offset > _count)

@@ -1,5 +1,4 @@
 ﻿using RuQu.Reader;
-using System;
 using System.Text;
 
 namespace RuQu.Csv
@@ -88,14 +87,16 @@ namespace RuQu.Csv
         private bool ProcessFirstRow(out string[]? row)
         {
             var r = new List<string>();
+            var hasValue = false;
             while (ProcessField(out var f))
             {
                 r.Add(f);
+                hasValue = true;
             }
             reader.IngoreCRLF();
             row = r.ToArray();
             FieldCount = row.Length;
-            return true;
+            return hasValue;
         }
 
         private bool TakeString(out string s)
@@ -105,100 +106,136 @@ namespace RuQu.Csv
                 throw new ParseException($"Expect some string end with '\"' at {reader.Index} but got eof");
             }
 
-            int charPos = 0;
+            int pos = 0;
             int len;
             ReadOnlySpan<char> remaining;
             do
             {
                 remaining = reader.Readed;
                 len = remaining.Length;
-                var charBufferSpan = remaining[charPos..];
-                var i = charBufferSpan.IndexOf('"');
-                if (i >= 0)
-                {
-                    if (i+ 1 >= remaining.Length)
-                    {
-                        if (reader.ReadNextBuffer(len))
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            s = remaining[..(charPos + i)].ToString();
-                            return true;
-                        }
-                    }
-                    if (remaining[i + 1] is '"')
-                    {
-                        charPos += i + 2;
-                        continue;
-                    }
-                    s = remaining[..(charPos + i)].ToString();
-                    return true;
-                }
-                else
-                {
-                    charPos += remaining.Length;
-                }
-            }
-            while (reader.ReadNextBuffer(len));
-            throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
-        }
-
-        private bool TakeField(out string s)
-        {
-            int charPos = 0;
-            int len;
-            ReadOnlySpan<char> remaining;
-            do
-            {
-                remaining = reader.Readed;
-                len = remaining.Length;
-                var charBufferSpan = remaining[charPos..];
+                var charBufferSpan = remaining[pos..];
                 var i = charBufferSpan.IndexOf(Separater);
                 if (i >= 0)
                 {
-                    charPos += i;
-                    s = remaining[..charPos].ToString();
-                    reader.Consume(charPos);
+                    if (reader.PeekByOffset(i + 1, out var n) && n == Separater)
+                    {
+                        pos += i + 2;
+                    }
+                    s = remaining[..i].ToString();
+                    reader.Consume(i + 1);
                     return true;
+                }
+            } while (reader.ReadNextBuffer(len));
+            s = reader.Readed.ToString();
+            return true;
+            //int charPos = 0;
+            //int len;
+            //ReadOnlySpan<char> remaining;
+            //do
+            //{
+            //    remaining = reader.Readed;
+            //    len = remaining.Length;
+            //    var charBufferSpan = remaining[charPos..];
+            //    var i = charBufferSpan.IndexOf('"');
+            //    if (i >= 0)
+            //    {
+            //        if (i + 1 >= remaining.Length)
+            //        {
+            //            if (reader.ReadNextBuffer(len))
+            //            {
+            //                continue;
+            //            }
+            //            else
+            //            {
+            //                s = remaining[..(charPos + i)].ToString();
+            //                return true;
+            //            }
+            //        }
+            //        if (remaining[i + 1] is '"')
+            //        {
+            //            charPos += i + 2;
+            //            continue;
+            //        }
+            //        s = remaining[..(charPos + i)].ToString();
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        charPos += remaining.Length;
+            //    }
+            //}
+            //while (reader.ReadNextBuffer(len));
+            //throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
+        }
+
+        //private bool TakeField(out string s)
+        //{
+        //    int charPos = 0;
+        //    int len;
+        //    ReadOnlySpan<char> remaining;
+        //    do
+        //    {
+        //        remaining = reader.Readed;
+        //        len = remaining.Length;
+        //        var charBufferSpan = remaining[charPos..];
+        //        var i = charBufferSpan.IndexOf(Separater);
+        //        if (i >= 0)
+        //        {
+        //            charPos += i;
+        //            s = remaining[..charPos].ToString();
+        //            reader.Consume(charPos);
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            charPos += remaining.Length;
+        //        }
+        //    }
+        //    while (reader.ReadNextBuffer(len));
+        //    throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
+        //}
+
+        private bool ProcessField(out string? f)
+        {
+            if (!reader.Peek(out var c) || reader.IngoreCRLF())
+            {
+                f = null;
+                return false;
+            }
+            if (c == Separater)
+            {
+                f = string.Empty;
+                reader.Consume(1);
+                return true;
+            }
+            else if (c is '"')
+            {
+                reader.Consume(1);
+                return TakeString(out f);
+            }
+            else
+            {
+                var i = reader.IndexOfAny(Separater, '\r', '\n');
+                if (i == 0)
+                {
+                    f = string.Empty;
+                }
+                else if (i > 0)
+                {
+                    f = reader.Readed[..i].ToString();
+                    reader.Consume(i + 1);
                 }
                 else
                 {
-                    charPos += remaining.Length;
+                    f = reader.Readed.ToString();
+                    reader.Consume(f.Length);
                 }
+                if (reader.Peek(out var cc) && cc == Separater)
+                {
+                    reader.Consume(1);
+                }
+                return true;
             }
-            while (reader.ReadNextBuffer(len));
-            throw new ParseException($"Expect string end with '\"' at {reader.Index} but got eof");
-        }
-
-        private bool ProcessField(out string f)
-        {
-            throw new NotImplementedException();
-            //    if (!reader.Peek(out var c) || reader.IngoreCRLF())
-            //    {
-            //        f = null;
-            //        return false;
-            //    }
-            //    if (c == Separater)
-            //    {
-            //        f = string.Empty;
-            //        reader.Consume(1);
-            //        return true;
-            //    }
-            //    else if (c is '"')
-            //    {
-            //        reader.Consume(1);
-            //        if (TakeString(out f))
-            //        { 
-
-            //        }
-
-            //    }
-            //    else
-            //    { 
-
-            //    }
         }
 
         private bool ProcessRow(out string[]? row)
@@ -219,45 +256,6 @@ namespace RuQu.Csv
         }
 
     }
-
-    //public class CsvReader : TextDataReader<string[]>
-    //{
-    //    public CsvReader(TextReader reader, int bufferSize) : base(reader, bufferSize)
-    //    {
-    //    }
-
-    //    private List<string> _current = new List<string>();
-    //    public char Separater { get; set; } = ',';
-
-    //    protected override bool ContinueRead(IReadBuffer<char> reader, out string[] row)
-    //    {
-    //        var buffer = reader.Remaining;
-    //        if (buffer.IsEmpty)
-    //        {
-    //            return ToRow(out row);
-    //        }
-    //        if (buffer[0] is '#')
-    //        {
-    //            var c = reader.ReadLine(out var line);
-    //            reader.AdvanceBuffer(c);
-    //            return ToRow(out row);
-    //        }
-    //        return ToRow(out row);
-
-    //    }
-
-    //    private bool ToRow(out string[] row)
-    //    {
-    //        if (_current.Count == 0)
-    //        {
-    //            row = null;
-    //            return false;
-    //        }
-    //        row = [.. _current];
-    //        _current.Clear();
-    //        return true;
-    //    }
-    //}
 
     //public class CsvWriter
     //{

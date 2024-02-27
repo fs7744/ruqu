@@ -2,7 +2,7 @@
 
 namespace RuQu.Reader
 {
-    public class StringReaderBuffer : IReaderBuffer<char>
+    public class StringReaderBuffer : IFixedReaderBuffer<char>
     {
         internal string _buffer;
         internal int _offset;
@@ -66,6 +66,18 @@ namespace RuQu.Reader
                 return false;
             }
             data = _buffer[_offset];
+            return true;
+        }
+
+        public bool PeekByOffset(int offset, out char data)
+        {
+            var o = _offset + offset;
+            if (o >= _buffer.Length)
+            {
+                data = default;
+                return false;
+            }
+            data = _buffer[o];
             return true;
         }
 

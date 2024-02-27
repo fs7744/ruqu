@@ -2,7 +2,7 @@
 
 namespace RuQu.Reader
 {
-    public unsafe class ReadOnlyMemoryReaderBuffer<T> : IReaderBuffer<T> where T : struct
+    public unsafe class ReadOnlyMemoryReaderBuffer<T> : IFixedReaderBuffer<T> where T : struct
     {
         internal ReadOnlyMemory<T> _buffer;
         internal int _offset;
@@ -74,6 +74,17 @@ namespace RuQu.Reader
             return true;
         }
 
+        public bool PeekByOffset(int offset, out T data)
+        {
+            var o = _offset + offset;
+            if (o >= _buffer.Length)
+            {
+                data = default;
+                return false;
+            }
+            data = _buffer.Span[o];
+            return true;
+        }
 
         public ValueTask<ReadOnlyMemory<T>?> PeekAsync(int count, CancellationToken cancellationToken = default)
         {
