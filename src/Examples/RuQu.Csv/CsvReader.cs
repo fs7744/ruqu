@@ -126,6 +126,10 @@ namespace RuQu.Csv
                     reader.Consume(i + 1);
                     return true;
                 }
+                else
+                {
+                    pos += charBufferSpan.Length;
+                }
             } while (reader.ReadNextBuffer(len));
             s = reader.Readed.ToString();
             return true;
