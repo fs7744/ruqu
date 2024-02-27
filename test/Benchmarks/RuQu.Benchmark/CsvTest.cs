@@ -1,4 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
+using CsvHelper.Configuration;
+using CsvHelper;
 using System.Globalization;
 
 namespace RuQu.Benchmark
@@ -10116,11 +10118,16 @@ namespace RuQu.Benchmark
                 3sss,3333
                 """;
 
+        private CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            Mode = CsvMode.RFC4180,
+        };
+
         [Benchmark]
         public void CsvHelper_Read()
         {
             using var sr = new StringReader(testdata);
-            using var csv = new CsvHelper.CsvReader(sr, CultureInfo.InvariantCulture);
+            using var csv = new CsvHelper.CsvReader(sr, config);
             var records = new List<string[]>();
             csv.Read();
             csv.ReadHeader();

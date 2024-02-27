@@ -66,7 +66,7 @@ namespace RuQu.Reader
         public void AdvanceBuffer(int count)
         {
             var remaining = _buffer.Length - _count + _offset;
-            if (remaining > (_buffer.Length / 2) && _buffer.Length != int.MaxValue)
+            if (remaining <= (_buffer.Length / 2) && _buffer.Length != int.MaxValue)
             {
                 // We have less than half the buffer available, double the buffer size.
                 char[] oldBuffer = _buffer;
