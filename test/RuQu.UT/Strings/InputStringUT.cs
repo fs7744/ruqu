@@ -77,7 +77,7 @@ namespace RuQu.UT
                 3sss,3333
                 """;
 
-            using var reader = new CsvReader(s, fristIsHeader: true);
+            using var reader = new CsvReader(new StringReader(s), fristIsHeader: true);
             var d = reader.ToArray();
             Assert.Equal(2, reader.Header.Length);
             Assert.Equal(2, d.Length);

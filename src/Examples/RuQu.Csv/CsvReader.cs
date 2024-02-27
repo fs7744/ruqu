@@ -120,6 +120,7 @@ namespace RuQu.Csv
                     if (reader.PeekByOffset(i + 1, out var n) && n == Separater)
                     {
                         pos += i + 2;
+                        continue;
                     }
                     s = remaining[..i].ToString();
                     reader.Consume(i + 1);
@@ -158,7 +159,7 @@ namespace RuQu.Csv
                 else if (i > 0)
                 {
                     f = reader.Readed[..i].ToString();
-                    reader.Consume(i + 1);
+                    reader.Consume(i);
                 }
                 else
                 {

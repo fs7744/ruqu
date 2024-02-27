@@ -111,10 +111,10 @@ namespace RuQu.Reader
         {
             if (!_isReaded)
             {
-                ReadNextBuffer(1);
+                ReadNextBuffer(count);
                 _isReaded = true;
             }
-            if (!_isFinalBlock)
+            if (!_isFinalBlock && count + _offset > _count)
             {
                 ReadNextBuffer(count);
             }
@@ -134,7 +134,7 @@ namespace RuQu.Reader
                 ReadNextBuffer(1);
                 _isReaded = true;
             }
-            if (!_isFinalBlock)
+            if (!_isFinalBlock && 1 + _offset > _count)
             {
                 ReadNextBuffer(1);
             }
@@ -155,7 +155,7 @@ namespace RuQu.Reader
                 ReadNextBuffer(o);
                 _isReaded = true;
             }
-            if (!_isFinalBlock)
+            if (!_isFinalBlock && o > _count)
             {
                 ReadNextBuffer(o);
             }
@@ -170,7 +170,7 @@ namespace RuQu.Reader
 
         public bool ReadNextBuffer(int count)
         {
-            if (!_isFinalBlock && count + _offset > _count)
+            if (!_isFinalBlock)
             {
                 AdvanceBuffer(count);
                 do
@@ -197,7 +197,7 @@ namespace RuQu.Reader
 
         public async ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default)
         {
-            if (!_isFinalBlock && count + _offset > _count)
+            if (!_isFinalBlock)
             {
                 AdvanceBuffer(count);
                 do
@@ -229,7 +229,7 @@ namespace RuQu.Reader
                 await ReadNextBufferAsync(count, cancellationToken);
                 _isReaded = true;
             }
-            if (!_isFinalBlock)
+            if (!_isFinalBlock && count + _offset > _count)
             {
                 await ReadNextBufferAsync(count, cancellationToken);
             }
@@ -247,7 +247,7 @@ namespace RuQu.Reader
                 await ReadNextBufferAsync(1, cancellationToken);
                 _isReaded = true;
             }
-            if (!_isFinalBlock)
+            if (!_isFinalBlock && 1 + _offset > _count)
             {
                 await ReadNextBufferAsync(1, cancellationToken);
             }
