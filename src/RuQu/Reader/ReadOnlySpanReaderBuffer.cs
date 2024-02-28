@@ -65,7 +65,6 @@ namespace RuQu.Reader
                 return false;
             }
             data = new ReadOnlySpan<T>(Unsafe.Add<T>(_buffer, _offset), count);
-            //data = new ReadOnlySpan<T>(_buffer, _length).Slice(_offset, count);
             return true;
         }
 
@@ -100,7 +99,6 @@ namespace RuQu.Reader
                 return ValueTask.FromResult<ReadOnlyMemory<T>?>(null);
             }
             return ValueTask.FromResult<ReadOnlyMemory<T>?>(new UnmanagedMemoryManager<T>((IntPtr)Unsafe.Add<T>(_buffer, _offset), count).Memory);
-            //return ValueTask.FromResult<ReadOnlyMemory<T>?>(new UnmanagedMemoryManager<T>((IntPtr)_buffer, _length).Memory.Slice(_offset, count));
         }
 
         public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default)
