@@ -19,6 +19,8 @@
 
         public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default);
 
+        public ValueTask<T?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default);
+
         public bool ReadNextBuffer(int count);
 
         public ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default);

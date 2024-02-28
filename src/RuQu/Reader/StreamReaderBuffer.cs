@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RuQu.Reader
 {
@@ -118,7 +119,7 @@ namespace RuQu.Reader
             {
                 ReadNextBuffer(count);
             }
-            if (_offset + count > _count)
+            if (_offset + count > _count || count <= 0)
             {
                 data = default;
                 return false;
@@ -148,7 +149,7 @@ namespace RuQu.Reader
         }
         public bool PeekByOffset(int offset, out byte data)
         {
-            var o = offset + 1;
+            var o = offset + _offset;
             if (!_isReaded)
             {
                 ReadNextBuffer(o);
@@ -158,7 +159,7 @@ namespace RuQu.Reader
             {
                 ReadNextBuffer(o);
             }
-            if (_offset >= _count)
+            if (o >= _count)
             {
                 data = default;
                 return false;
@@ -232,7 +233,7 @@ namespace RuQu.Reader
             {
                 await ReadNextBufferAsync(count, cancellationToken);
             }
-            if (_offset >= _count)
+            if (_offset >= _count || count <= 0)
             {
                 return null;
             }
@@ -255,6 +256,25 @@ namespace RuQu.Reader
                 return null;
             }
             return _buffer[_offset];
+        }
+
+        public async ValueTask<byte?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
+        {
+            var o = offset + _offset;
+            if (!_isReaded)
+            {
+                await ReadNextBufferAsync(o, cancellationToken);
+                _isReaded = true;
+            }
+            if (!_isFinalBlock && o > _count)
+            {
+                await ReadNextBufferAsync(o, cancellationToken);
+            }
+            if (o >= _count)
+            {
+                return null;
+            }
+            return _buffer[o];
         }
     }
 }

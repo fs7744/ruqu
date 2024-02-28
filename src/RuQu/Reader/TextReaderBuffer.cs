@@ -149,7 +149,7 @@ namespace RuQu.Reader
 
         public bool PeekByOffset(int offset, out char data)
         {
-            var o = offset + 1;
+            var o = offset + _offset;
             if (!_isReaded)
             {
                 ReadNextBuffer(o);
@@ -159,7 +159,7 @@ namespace RuQu.Reader
             {
                 ReadNextBuffer(o);
             }
-            if (_offset >= _count)
+            if (o >= _count)
             {
                 data = default;
                 return false;
@@ -256,6 +256,25 @@ namespace RuQu.Reader
                 return null;
             }
             return _buffer[_offset];
+        }
+
+        public async ValueTask<char?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
+        {
+            var o = offset + _offset;
+            if (!_isReaded)
+            {
+                await ReadNextBufferAsync(o, cancellationToken);
+                _isReaded = true;
+            }
+            if (!_isFinalBlock && o > _count)
+            {
+                await ReadNextBufferAsync(o, cancellationToken);
+            }
+            if (o >= _count)
+            {
+                return null;
+            }
+            return _buffer[o];
         }
     }
 }

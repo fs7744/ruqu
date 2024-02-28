@@ -61,7 +61,7 @@ namespace RuQu.Reader
 
         public bool Peek(int count, out ReadOnlySpan<byte> data)
         {
-            if (_offset + count > _fileLength)
+            if (_offset + count > _fileLength || count <= 0)
             {
                 data = default;
                 return false;
@@ -101,6 +101,11 @@ namespace RuQu.Reader
         public ValueTask<byte?> PeekAsync(CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
+        }
+
+        public ValueTask<byte?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
 
         public bool ReadNextBuffer(int count) => false;

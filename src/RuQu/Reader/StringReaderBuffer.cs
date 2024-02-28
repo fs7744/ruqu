@@ -49,7 +49,7 @@ namespace RuQu.Reader
 
         public bool Peek(int count, out ReadOnlySpan<char> data)
         {
-            if (_offset + count > _buffer.Length)
+            if (_offset + count > _buffer.Length || count <= 0)
             {
                 data = default;
                 return false;
@@ -84,7 +84,7 @@ namespace RuQu.Reader
         public ValueTask<ReadOnlyMemory<char>?> PeekAsync(int count, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (_offset + count > _buffer.Length)
+            if (_offset + count > _buffer.Length || count <= 0)
             {
                 return ValueTask.FromResult<ReadOnlyMemory<char>?>(null);
             }
@@ -99,6 +99,17 @@ namespace RuQu.Reader
                 return ValueTask.FromResult<char?>(null);
             }
             return ValueTask.FromResult<char?>(_buffer[_offset]);
+        }
+
+        public ValueTask<char?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var o = _offset + offset;
+            if (o >= _buffer.Length)
+            {
+                return ValueTask.FromResult<char?>(null);
+            }
+            return ValueTask.FromResult<char?>(_buffer[o]);
         }
 
         public bool ReadNextBuffer(int count) => false;
