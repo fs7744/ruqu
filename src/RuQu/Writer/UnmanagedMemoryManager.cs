@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Runtime.InteropServices;
 
-namespace RuQu.Reader
+namespace RuQu.Writer
 {
-    public sealed unsafe class UnmanagedMemoryManager<T> : MemoryManager<T> where T : unmanaged
+    public sealed unsafe class UnmanagedMemoryManager<T> : MemoryManager<T>
     {
         private readonly T* _pointer;
         private readonly int _length;
@@ -17,7 +17,6 @@ namespace RuQu.Reader
             }
         }
 
-        [CLSCompliant(false)]
         public UnmanagedMemoryManager(T* pointer, int length)
         {
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
@@ -25,7 +24,7 @@ namespace RuQu.Reader
             _length = length;
         }
 
-        public UnmanagedMemoryManager(IntPtr pointer, int length) : this((T*)pointer.ToPointer(), length) { }
+        public UnmanagedMemoryManager(nint pointer, int length) : this((T*)pointer.ToPointer(), length) { }
 
         public override Span<T> GetSpan() => new Span<T>(_pointer, _length);
 

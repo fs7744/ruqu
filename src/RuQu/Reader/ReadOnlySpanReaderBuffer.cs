@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using RuQu.Writer;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
-    public unsafe struct ReadOnlySpanReaderBuffer<T> : IFixedReaderBuffer<T> where T : struct
+    public unsafe class ReadOnlySpanReaderBuffer<T> : IFixedReaderBuffer<T> where T : struct
     {
         internal void* _buffer;
         internal int _offset;
@@ -58,12 +59,13 @@ namespace RuQu.Reader
 
         public bool Peek(int count, out ReadOnlySpan<T> data)
         {
-            if (_offset + count > _length)
+            if (_offset + count > _length || count <= 0)
             {
                 data = default;
                 return false;
             }
-            data = new ReadOnlySpan<T>(_buffer, _length).Slice(_offset, count);
+            data = new ReadOnlySpan<T>(Unsafe.Add<T>(_buffer, _offset), count);
+            //data = new ReadOnlySpan<T>(_buffer, _length).Slice(_offset, count);
             return true;
         }
 
@@ -74,7 +76,7 @@ namespace RuQu.Reader
                 data = default;
                 return false;
             }
-            data = new ReadOnlySpan<T>(_buffer, _length)[_offset];
+            data = Unsafe.As<byte, T>(ref *(byte*)Unsafe.Add<T>(_buffer, _offset));
             return true;
         }
 
@@ -86,18 +88,39 @@ namespace RuQu.Reader
                 data = default;
                 return false;
             }
-            data = new ReadOnlySpan<T>(_buffer, _length)[o];
+            data = Unsafe.As<byte, T>(ref *(byte*)Unsafe.Add<T>(_buffer, o));
             return true;
         }
 
         public ValueTask<ReadOnlyMemory<T>?> PeekAsync(int count, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_offset + count > _length || count <= 0)
+            {
+                return ValueTask.FromResult<ReadOnlyMemory<T>?>(null);
+            }
+            return ValueTask.FromResult<ReadOnlyMemory<T>?>(new UnmanagedMemoryManager<T>((IntPtr)Unsafe.Add<T>(_buffer, _offset), count).Memory);
+            //return ValueTask.FromResult<ReadOnlyMemory<T>?>(new UnmanagedMemoryManager<T>((IntPtr)_buffer, _length).Memory.Slice(_offset, count));
         }
 
         public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Peek(out var data))
+            {
+                return ValueTask.FromResult<T?>(data);
+            }
+            return ValueTask.FromResult<T?>(null);
+        }
+
+        public ValueTask<T?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (PeekByOffset(offset, out var data))
+            {
+                return ValueTask.FromResult<T?>(data);
+            }
+            return ValueTask.FromResult<T?>(null);
         }
 
         public bool ReadNextBuffer(int count) => false;
