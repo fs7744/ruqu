@@ -2,33 +2,18 @@
 
 namespace RuQu.UT.Reader
 {
-    public struct TestData
-    {
-        public int Data { get; set; }
-    }
-
-    public class ReadOnlySpanReaderBufferUT
+    public class ArrayReaderBufferUT
     {
         [Fact]
         public void WhenCtor()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
             Assert.Equal(0, r.Index);
             Assert.Equal(0, r.ConsumedCount);
             Assert.False(r.IsEOF);
             Assert.False(r.ReadNextBuffer(1));
             Assert.False(r.ReadNextBufferAsync(1).Result);
-            Assert.Equal(3, r.Readed.Length);
-            for (int i = 0; i < b.Length; i++)
-            {
-                Assert.Equal(b[i], r.Readed[i]);
-            }
-
-            r = new ReadOnlySpanReaderBuffer<char>((ReadOnlySpan<char>)b.AsSpan());
-            Assert.Equal(0, r.Index);
-            Assert.Equal(0, r.ConsumedCount);
-            Assert.False(r.IsEOF);
             Assert.Equal(3, r.Readed.Length);
             for (int i = 0; i < b.Length; i++)
             {
@@ -40,22 +25,12 @@ namespace RuQu.UT.Reader
         public void WhenCtor_Struct()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
             Assert.Equal(0, r.Index);
             Assert.Equal(0, r.ConsumedCount);
             Assert.False(r.IsEOF);
             Assert.False(r.ReadNextBuffer(1));
             Assert.False(r.ReadNextBufferAsync(1).Result);
-            Assert.Equal(3, r.Readed.Length);
-            for (int i = 0; i < b.Length; i++)
-            {
-                Assert.Equal(b[i], r.Readed[i]);
-            }
-
-            r = new ReadOnlySpanReaderBuffer<TestData>((ReadOnlySpan<TestData>)b.AsSpan());
-            Assert.Equal(0, r.Index);
-            Assert.Equal(0, r.ConsumedCount);
-            Assert.False(r.IsEOF);
             Assert.Equal(3, r.Readed.Length);
             for (int i = 0; i < b.Length; i++)
             {
@@ -67,7 +42,7 @@ namespace RuQu.UT.Reader
         public void PeekTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(i, r.Index);
@@ -86,7 +61,7 @@ namespace RuQu.UT.Reader
         public void Peek_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(i, r.Index);
@@ -104,7 +79,7 @@ namespace RuQu.UT.Reader
         public async Task PeekAsyncTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(i, r.Index);
@@ -125,7 +100,7 @@ namespace RuQu.UT.Reader
         public async Task PeekAsync_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(i, r.Index);
@@ -145,7 +120,7 @@ namespace RuQu.UT.Reader
         public void PeekCountTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
 
             Assert.False(r.Peek(0, out var data));
             Assert.Equal(0, data.Length);
@@ -172,7 +147,7 @@ namespace RuQu.UT.Reader
         public void PeekCount_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
 
             Assert.False(r.Peek(0, out var data));
             Assert.Equal(0, data.Length);
@@ -208,7 +183,7 @@ namespace RuQu.UT.Reader
         public async Task PeekCountAsyncTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
 
             var data = await r.PeekAsync(0);
             Assert.False(data.HasValue);
@@ -236,7 +211,7 @@ namespace RuQu.UT.Reader
         public async Task PeekCountAsync_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
 
             var data = await r.PeekAsync(0);
             Assert.False(data.HasValue);
@@ -273,7 +248,7 @@ namespace RuQu.UT.Reader
         public void PeekByOffsetTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(0, r.Index);
@@ -291,7 +266,7 @@ namespace RuQu.UT.Reader
         public void PeekByOffset_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(0, r.Index);
@@ -309,7 +284,7 @@ namespace RuQu.UT.Reader
         public async Task PeekByOffsetAsyncTest()
         {
             var b = new char[] { '1', '2', '3' };
-            var r = new ReadOnlySpanReaderBuffer<char>(b);
+            var r = new ArrayReaderBuffer<char>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(0, r.Index);
@@ -328,7 +303,7 @@ namespace RuQu.UT.Reader
         public async Task PeekByOffsetAsync_StructTest()
         {
             var b = new TestData[] { new TestData() { Data = 6 }, new TestData() { Data = 236 }, new TestData() { Data = 776 } };
-            var r = new ReadOnlySpanReaderBuffer<TestData>(b);
+            var r = new ArrayReaderBuffer<TestData>(b);
             for (int i = 0; i < b.Length; i++)
             {
                 Assert.Equal(0, r.Index);
