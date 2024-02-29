@@ -147,7 +147,7 @@ namespace RuQu.Reader
                 ReadNextBuffer(1);
                 _isReaded = true;
             }
-            if (!_isFinalBlock && 1 + _offset > _count)
+            if (!_isFinalBlock && _offset >= _count)
             {
                 ReadNextBuffer(1);
             }
@@ -261,7 +261,7 @@ namespace RuQu.Reader
                 await ReadNextBufferAsync(1, cancellationToken);
                 _isReaded = true;
             }
-            if (!_isFinalBlock && 1 + _offset > _count)
+            if (!_isFinalBlock && _offset >= _count)
             {
                 await ReadNextBufferAsync(1, cancellationToken);
             }
