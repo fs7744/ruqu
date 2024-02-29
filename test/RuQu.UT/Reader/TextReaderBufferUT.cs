@@ -176,7 +176,7 @@ namespace RuQu.UT.Reader
         [Fact]
         public void AdvanceBufferTest()
         {
-            var r = new TextReaderBuffer(new StringReader(""), 1);
+            var r = new TextReaderBuffer(new StringReader("123"), 1);
             ref char[] f = ref GetSet_buffer(r);
             ref int o = ref GetSet_offset(r);
             ref int c = ref GetSet_count(r);

@@ -94,7 +94,8 @@ namespace RuQu.Reader
                 _maxCount = _count;
                 _count -= _offset;
                 // Copy the unprocessed data to the new buffer while shifting the processed bytes.
-                Array.Copy(oldBuffer, _offset, newBuffer, 0, _count);
+                oldBuffer.AsSpan(_offset, _count).CopyTo(newBuffer);
+                //Array.Copy(oldBuffer, _offset, newBuffer, 0, _count);
                 _buffer = newBuffer;
                 // Clear and return the old buffer
                 new Span<char>(oldBuffer, 0, oldMaxCount).Clear();
@@ -104,7 +105,8 @@ namespace RuQu.Reader
             else if (_offset != 0)
             {
                 _count -= _offset;
-                Array.Copy(_buffer, _offset, _buffer, 0, _count);
+                _buffer.AsSpan(_offset, _count).CopyTo(_buffer);
+                //Array.Copy(_buffer, _offset, _buffer, 0, _count);
                 _offset = 0;
             }
         }
