@@ -25,8 +25,11 @@
             public SynchronousAsyncEnumerator(IEnumerator<T> enumerator) =>
                 _enumerator = enumerator;
 
-            public ValueTask DisposeAsync() =>
-                ValueTask.CompletedTask;
+            public ValueTask DisposeAsync()
+            {
+                _enumerator.Dispose();
+                return ValueTask.CompletedTask;
+            }
 
             public ValueTask<bool> MoveNextAsync() =>
                ValueTask.FromResult(_enumerator.MoveNext());
