@@ -80,7 +80,7 @@ namespace RuQu.Reader
         public void AdvanceBuffer(int count)
         {
             var remaining = _buffer.Length - _count + _offset;
-            if (remaining > (_buffer.Length / 2) && _buffer.Length != int.MaxValue)
+            if ((remaining <= (_buffer.Length / 2) || count > remaining) && _buffer.Length != int.MaxValue)
             {
                 // We have less than half the buffer available, double the buffer size.
                 byte[] oldBuffer = _buffer;
@@ -88,17 +88,17 @@ namespace RuQu.Reader
                 var newSize = (_buffer.Length < (int.MaxValue / 2)) ? _buffer.Length * 2 : int.MaxValue;
                 while (newSize < count)
                 {
-                    newSize *= (newSize < (int.MaxValue / 2)) ? newSize * 2 : int.MaxValue;
+                    newSize = (newSize < (int.MaxValue / 2)) ? newSize * 2 : int.MaxValue;
                 }
                 byte[] newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
+                _maxCount = _count;
+                _count -= _offset;
                 // Copy the unprocessed data to the new buffer while shifting the processed bytes.
-                Buffer.BlockCopy(oldBuffer, _offset, newBuffer, 0, _count - _offset);
+                Buffer.BlockCopy(oldBuffer, _offset, newBuffer, 0, _count);
                 _buffer = newBuffer;
                 // Clear and return the old buffer
                 new Span<byte>(oldBuffer, 0, oldMaxCount).Clear();
                 ArrayPool<byte>.Shared.Return(oldBuffer);
-                _maxCount = _count;
-                _count -= _offset;
                 _offset = 0;
             }
             else if (_offset != 0)

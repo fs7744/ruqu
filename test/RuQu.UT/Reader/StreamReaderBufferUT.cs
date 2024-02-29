@@ -1,4 +1,6 @@
 ﻿using RuQu.Reader;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Text;
 
 namespace RuQu.UT.Reader
@@ -159,6 +161,63 @@ namespace RuQu.UT.Reader
             Assert.False(r.IsEOF);
             var cc = await r.PeekByOffsetAsync(3);
             Assert.False(cc.HasValue);
+        }
+
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_buffer")]
+        extern static ref byte[] GetSet_buffer(StreamReaderBuffer c);
+
+
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_offset")]
+        extern static ref int GetSet_offset(StreamReaderBuffer c);
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_count")]
+        extern static ref int GetSet_count(StreamReaderBuffer c);
+
+        [Fact]
+        public void AdvanceBufferTest()
+        {
+            var b = Encoding.UTF8.GetBytes("123");
+            var r = new StreamReaderBuffer(new MemoryStream(b), 1);
+            ref byte[] f = ref GetSet_buffer(r);
+            ref int o = ref GetSet_offset(r);
+            ref int c = ref GetSet_count(r);
+            var l = f.Length;
+            Assert.True(l > 0);
+            Assert.Equal(0, c);
+            Assert.Equal(0, o);
+            r.AdvanceBuffer(0);
+            Assert.Equal(0, c);
+            Assert.Equal(0, o);
+            Assert.Equal(l, f.Length);
+
+            for (int i = 0; i < l; i++)
+            {
+                f[i] = (byte)i;
+            }
+
+            o = 2;
+            c = 5;
+            r.AdvanceBuffer(1);
+            Assert.Equal(l, f.Length);
+            Assert.Equal((byte)2, f[0]);
+            Assert.Equal((byte)3, f[1]);
+            Assert.Equal((byte)4, f[2]);
+            Assert.Equal((byte)3, f[3]);
+
+            r.AdvanceBuffer(1023);
+            Assert.Equal(1024, f.Length);
+            Assert.Equal((byte)2, f[0]);
+            Assert.Equal((byte)3, f[1]);
+            Assert.Equal((byte)4, f[2]);
+            Assert.Equal((byte)0, f[3]);
+            var span = r.Readed;
+            Assert.Equal(6, span.Length);
+
+            Assert.Equal((byte)2, span[0]);
+            Assert.Equal((byte)3, span[1]);
+            Assert.Equal((byte)4, span[2]);
+            Assert.Equal((byte)49, span[3]);
+            Assert.Equal((byte)50, span[4]);
+            Assert.Equal((byte)51, span[5]);
         }
     }
 }

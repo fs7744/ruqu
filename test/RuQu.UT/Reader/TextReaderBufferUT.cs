@@ -1,4 +1,5 @@
 ﻿using RuQu.Reader;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace RuQu.UT.Reader
@@ -157,6 +158,59 @@ namespace RuQu.UT.Reader
             Assert.False(r.IsEOF);
             var cc = await r.PeekByOffsetAsync(3);
             Assert.False(cc.HasValue);
+        }
+
+
+
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_buffer")]
+        extern static ref char[] GetSet_buffer(TextReaderBuffer c);
+
+
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_offset")]
+        extern static ref int GetSet_offset(TextReaderBuffer c);
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_count")]
+        extern static ref int GetSet_count(TextReaderBuffer c);
+        [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_isReaded")]
+        extern static ref bool GetSet_isReaded(TextReaderBuffer c);
+
+        [Fact]
+        public void AdvanceBufferTest()
+        {
+            var r = new TextReaderBuffer(new StringReader(""), 1);
+            ref char[] f = ref GetSet_buffer(r);
+            ref int o = ref GetSet_offset(r);
+            ref int c = ref GetSet_count(r);
+            ref bool rd = ref GetSet_isReaded(r);
+            rd = true;
+            var l = f.Length;
+            Assert.True(l > 0);
+            Assert.Equal(0, c);
+            Assert.Equal(0, o);
+            r.AdvanceBuffer(0);
+            Assert.Equal(0, c);
+            Assert.Equal(0, o);
+            Assert.Equal(l, f.Length);
+
+            for (int i = 0; i < l; i++)
+            {
+                f[i] = i.ToString().Last();
+            }
+
+            o = 2;
+            c = 5;
+            r.AdvanceBuffer(1);
+            Assert.Equal(l, f.Length);
+            Assert.Equal('2', f[0]);
+            Assert.Equal('3', f[1]);
+            Assert.Equal('4', f[2]);
+            Assert.Equal('3', f[3]);
+
+            r.AdvanceBuffer(1023);
+            Assert.Equal(1024, f.Length);
+            Assert.Equal('2', f[0]);
+            Assert.Equal('3', f[1]);
+            Assert.Equal('4', f[2]);
+            Assert.Equal(char.MinValue, f[3]);
         }
     }
 }
