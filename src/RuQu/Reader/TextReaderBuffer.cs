@@ -132,7 +132,7 @@ namespace RuQu.Reader
             {
                 ReadNextBuffer(count);
             }
-            if (_offset + count > _count)
+            if (_offset + count > _count || count <= 0)
             {
                 data = default;
                 return false;
@@ -243,11 +243,12 @@ namespace RuQu.Reader
                 await ReadNextBufferAsync(count, cancellationToken);
                 _isReaded = true;
             }
-            if (!_isFinalBlock && count + _offset > _count)
+            var o = count + _offset;
+            if (!_isFinalBlock &&  o > _count)
             {
                 await ReadNextBufferAsync(count, cancellationToken);
             }
-            if (_offset >= _count)
+            if (o > _count || count <= 0)
             {
                 return null;
             }

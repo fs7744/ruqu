@@ -1,4 +1,5 @@
 ﻿using RuQu.Writer;
+using System;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 
@@ -102,17 +103,32 @@ namespace RuQu.Reader
 
         public ValueTask<ReadOnlyMemory<byte>?> PeekAsync(int count, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_offset + count > _fileLength || count <= 0)
+            {
+                return ValueTask.FromResult<ReadOnlyMemory<byte>?>(null);
+            }
+            return ValueTask.FromResult<ReadOnlyMemory<byte>?>(new UnmanagedMemoryManager<byte>((IntPtr)Unsafe.Add<byte>(_pointer, _offset), count).Memory);
         }
 
         public ValueTask<byte?> PeekAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Peek(out var data))
+            {
+                return ValueTask.FromResult<byte?>(data);
+            }
+            return ValueTask.FromResult<byte?>(null);
         }
 
         public ValueTask<byte?> PeekByOffsetAsync(int offset, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (PeekByOffset(offset, out var data))
+            {
+                return ValueTask.FromResult<byte?>(data);
+            }
+            return ValueTask.FromResult<byte?>(null);
         }
 
         public bool ReadNextBuffer(int count) => false;
