@@ -1,4 +1,5 @@
-﻿using System.IO.MemoryMappedFiles;
+﻿using RuQu.Writer;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 
 namespace RuQu.Reader
@@ -27,6 +28,12 @@ namespace RuQu.Reader
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => new ReadOnlySpan<byte>(_pointer, _fileLength)[_offset.._fileLength];
+        }
+
+        public ReadOnlyMemory<byte> ReadedMemory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new UnmanagedMemoryManager<byte>((IntPtr)Unsafe.Add<byte>(_pointer, _offset), _fileLength).Memory;
         }
 
         public bool IsEOF

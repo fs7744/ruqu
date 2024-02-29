@@ -19,6 +19,11 @@ namespace RuQu.UT.Reader
             {
                 Assert.Equal(b[i], r.Readed[i]);
             }
+            Assert.Equal(3, r.ReadedMemory.Length);
+            for (int i = 0; i < b.Length; i++)
+            {
+                Assert.Equal(b[i], r.ReadedMemory.Span[i]);
+            }
         }
 
         [Fact]
@@ -34,7 +39,12 @@ namespace RuQu.UT.Reader
             Assert.Equal(3, r.Readed.Length);
             for (int i = 0; i < b.Length; i++)
             {
-                Assert.Equal(b[i], r.Readed[i]);
+                Assert.Equal(b[i].Data, r.Readed[i].Data);
+            }
+            Assert.Equal(3, r.ReadedMemory.Length);
+            for (int i = 0; i < b.Length; i++)
+            {
+                Assert.Equal(b[i].Data, r.ReadedMemory.Span[i].Data);
             }
         }
 

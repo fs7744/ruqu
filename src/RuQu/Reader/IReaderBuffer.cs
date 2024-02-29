@@ -5,6 +5,7 @@
         public int ConsumedCount { get; }
         public int Index { get; }
         public ReadOnlySpan<T> Readed { get; }
+        public ReadOnlyMemory<T> ReadedMemory { get; }
         public bool IsEOF { get; }
 
         public void Consume(int count);

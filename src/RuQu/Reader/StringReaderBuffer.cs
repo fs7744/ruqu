@@ -19,6 +19,12 @@ namespace RuQu.Reader
             get => _buffer.AsSpan(_offset);
         }
 
+        public ReadOnlyMemory<char> ReadedMemory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _buffer.AsMemory(_offset);
+        }
+
         public bool IsEOF
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

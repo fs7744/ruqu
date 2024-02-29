@@ -28,6 +28,20 @@ namespace RuQu.Reader
             }
         }
 
+        public ReadOnlyMemory<char> ReadedMemory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                if (!_isReaded)
+                {
+                    ReadNextBuffer(1);
+                    _isReaded = true;
+                }
+                return _buffer.AsMemory(_offset, _count - _offset);
+            }
+        }
+
         public bool IsEOF
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

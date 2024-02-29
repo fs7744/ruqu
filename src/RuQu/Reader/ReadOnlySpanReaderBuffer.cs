@@ -26,7 +26,13 @@ namespace RuQu.Reader
         public ReadOnlySpan<T> Readed
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new ReadOnlySpan<T>(_buffer, _length)[_offset.._length];
+            get => new ReadOnlySpan<T>(Unsafe.Add<T>(_buffer, _offset), _length);
+        }
+
+        public ReadOnlyMemory<T> ReadedMemory
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new UnmanagedMemoryManager<T>((IntPtr)Unsafe.Add<T>(_buffer, _offset), _length).Memory;
         }
 
         public bool IsEOF

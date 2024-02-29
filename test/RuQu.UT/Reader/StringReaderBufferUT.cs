@@ -19,6 +19,11 @@ namespace RuQu.UT.Reader
             {
                 Assert.Equal(b[i], r.Readed[i]);
             }
+            Assert.Equal(3, r.ReadedMemory.Length);
+            for (int i = 0; i < b.Length; i++)
+            {
+                Assert.Equal(b[i], r.ReadedMemory.Span[i]);
+            }
         }
 
         [Fact]
