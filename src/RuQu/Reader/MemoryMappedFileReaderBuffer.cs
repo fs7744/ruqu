@@ -28,7 +28,7 @@ namespace RuQu.Reader
         public ReadOnlySpan<byte> Readed
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new ReadOnlySpan<byte>(_pointer, _fileLength)[_offset.._fileLength];
+            get => new ReadOnlySpan<byte>(_pointer + _offset, _fileLength - _offset);
         }
 
         public ReadOnlyMemory<byte> ReadedMemory
