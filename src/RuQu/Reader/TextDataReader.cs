@@ -98,4 +98,60 @@ namespace RuQu.Reader
             return ValueTask.CompletedTask;
         }
     }
+
+    public abstract class StreamDataReader<Row> : IDisposable, IEnumerable<Row>, IEnumerator<Row>, IAsyncEnumerable<Row>, IAsyncEnumerator<Row>
+    {
+        protected IReaderBuffer<byte> reader;
+
+        public Row Current { get; protected set; }
+
+        object IEnumerator.Current => Current;
+
+        public StreamDataReader(Stream stream, int bufferSize)
+        {
+            this.reader = new StreamReaderBuffer(stream, bufferSize);
+        }
+
+        public void Dispose()
+        {
+            if (reader != null)
+            {
+                reader.Dispose();
+                reader = null;
+            }
+        }
+
+        public IEnumerator<Row> GetEnumerator()
+        {
+            return this;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this;
+        }
+
+        public IAsyncEnumerator<Row> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            return this;
+        }
+
+        public abstract bool MoveNext();
+
+        public virtual void Reset()
+        {
+            throw new NotSupportedException();
+        }
+
+        public virtual ValueTask<bool> MoveNextAsync()
+        {
+            return ValueTask.FromResult(MoveNext());
+        }
+
+        public virtual ValueTask DisposeAsync()
+        {
+            Dispose();
+            return ValueTask.CompletedTask;
+        }
+    }
 }

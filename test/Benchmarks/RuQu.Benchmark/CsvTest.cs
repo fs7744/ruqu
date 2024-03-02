@@ -10157,5 +10157,44 @@ namespace RuQu.Benchmark
             using var reader = new RuQu.Csv.CsvReader(testdata, fristIsHeader: true);
             var d = reader.ToArray();
         }
+
+        //[IterationCount(2)]
+        //[Benchmark]
+        //public void CsvHelper_file()
+        //{
+        //    using var f = File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv");
+        //    using var sr = new StreamReader(f);
+        //    using var csv = new CsvHelper.CsvReader(sr, config);
+        //    var records = new List<string[]>();
+        //    csv.Read();
+        //    csv.ReadHeader();
+        //    while (csv.Read())
+        //    {
+        //        var record = new string[csv.ColumnCount];
+        //        for (var i = 0; i < record.Length; i++)
+        //        {
+        //            record[i] = csv.GetField(i);
+        //        }
+        //        records.Add(record);
+        //    }
+        //}
+
+        //[IterationCount(2)]
+        //[Benchmark]
+        //public void RuQu_Read_Csv_file()
+        //{
+        //    using var f = File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv");
+        //    using var reader = new RuQu.Csv.CsvReader(f, bufferSize: 4096, fristIsHeader: false);
+        //    var d = reader.ToArray();
+        //}
+
+        //[IterationCount(2)]
+        //[Benchmark]
+        //public void RuQu_StreamRead_Csv_file()
+        //{
+        //    using var f = File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv");
+        //    using var reader = new RuQu.Csv.UTF8BytesCsvReader(f, bufferSize: (int)f.Length, fristIsHeader: false);
+        //    var d = reader.ToArray();
+        //}
     }
 }
