@@ -111,24 +111,32 @@ namespace RuQu.Csv
             ReadOnlySpan<char> remaining;
             do
             {
+                ddd:
                 remaining = reader.Readed;
                 len = remaining.Length;
                 var charBufferSpan = remaining[pos..];
                 var i = charBufferSpan.IndexOf(Separater);
                 if (i >= 0)
                 {
-                    if (reader.PeekByOffset(i + 1, out var n) && n == Separater)
+                    if ((i + pos) == 0)
                     {
-                        pos += i + 2;
-                        continue;
+                        pos++;
                     }
-                    s = remaining[..i].ToString();
-                    reader.Consume(i + 1);
-                    return true;
+                    else if (remaining[pos + i - 1] == '"')
+                    {
+                        s = remaining[..(i + pos)][..^1].ToString();
+                        reader.Consume(pos + i + 1);
+                        return true;
+                    }
+                    else
+                    {
+                        pos += i + 1;
+                        goto ddd;
+                    }
                 }
                 else
                 {
-                    pos += charBufferSpan.Length;
+                    pos = len;
                 }
             } while (reader.ReadNextBuffer(len));
             s = reader.Readed.ToString();
