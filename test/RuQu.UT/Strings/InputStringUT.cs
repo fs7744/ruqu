@@ -84,15 +84,15 @@ namespace RuQu.UT
             Assert.Equal(4, d.SelectMany(i => i).Count());
         }
 
-        [Fact]
-        public unsafe void CSVParse1Test()
-        {
+        //[Fact]
+        //public unsafe void CSVParse1Test()
+        //{
 
-            using var reader = new CsvReader(File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv"), fristIsHeader: false);
-            var d = reader.ToArray();
-            //Assert.Equal(2, reader.Header.Length);
-            //Assert.Equal(2, d.Length);
-            //Assert.Equal(4, d.SelectMany(i => i).Count());
-        }
+        //    using var reader = new CsvReader(File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv"), fristIsHeader: false);
+        //    var d = reader.ToArray();
+        //    //Assert.Equal(2, reader.Header.Length);
+        //    //Assert.Equal(2, d.Length);
+        //    //Assert.Equal(4, d.SelectMany(i => i).Count());
+        //}
     }
 }
