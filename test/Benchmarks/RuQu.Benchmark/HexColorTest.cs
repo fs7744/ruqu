@@ -47,6 +47,12 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
+        public void RuQu_Chunk_HexColor()
+        {
+            (byte red, byte green, byte blue) = HexColor.ChunkParser.Read("#2F14DF");
+        }
+
+        [Benchmark]
         public void RuQu_HexColor_Stream()
         {
             stream.Seek(0, SeekOrigin.Begin);

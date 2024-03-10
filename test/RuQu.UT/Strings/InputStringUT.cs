@@ -24,6 +24,10 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(21, green);
             Assert.Equal(223, blue);
+            (red, green, blue) = HexColor.ChunkParser.Read("#2F15DF");
+            Assert.Equal(47, red);
+            Assert.Equal(21, green);
+            Assert.Equal(223, blue);
         }
 
         //[Theory]
