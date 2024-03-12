@@ -69,6 +69,10 @@ namespace RuQu.UT
             var a = IniParser.Instance.Read(s);
             Assert.Equal(2, a.Count);
             Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
+
+            a = new IniChunkParser().Read(s);
+            Assert.Equal(2, a.Count);
+            Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
             var ss = IniParser.Instance.WriteToString(a);
         }
 

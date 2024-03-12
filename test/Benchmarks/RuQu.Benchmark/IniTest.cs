@@ -99,6 +99,13 @@ namespace RuQu.Benchmark
             IniParser.Instance.Read(testdata);
         }
 
+        private IniChunkParser chunkParser = new IniChunkParser();
+        [Benchmark]
+        public void RuQu_Chunk_Read_Ini()
+        {
+            chunkParser.Read(testdata);
+        }
+
         [Benchmark]
         public void IniDataParser_Read()
         {
