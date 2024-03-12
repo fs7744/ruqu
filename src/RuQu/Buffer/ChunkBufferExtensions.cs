@@ -1,5 +1,6 @@
 ﻿using RuQu.Reader;
 using System.Buffers;
+using static RuQu.Buffer.TextSparseBufferReader;
 
 namespace RuQu.Buffer
 {
@@ -25,7 +26,7 @@ namespace RuQu.Buffer
                 t = default;
                 return false;
             }
-            var m = chunk.Memory;
+            var m = chunk.UnreadMemory;
             if (count <= m.Length)
             {
                 t = new ReadOnlySequence<T>(m[..count]);
@@ -41,7 +42,7 @@ namespace RuQu.Buffer
                 {
                     break;
                 }
-                var memory = next.Memory;
+                var memory = next.UnreadMemory;
                 if (c <= memory.Length)
                 {
                     t = new ReadOnlySequence<T>(chunk as ReadOnlySequenceSegment<T>, chunk.Index, next as ReadOnlySequenceSegment<T>, c - 1);
@@ -121,11 +122,11 @@ namespace RuQu.Buffer
             var buffer = reader.GetCurrentChunk();
             if (buffer is ISingleChunkReader<char> r)
             {
-                var charBufferSpan = r.Span;
+                var charBufferSpan = r.UnreadSpan;
                 int idxOfNewline = charBufferSpan.IndexOfAny('\r', '\n');
                 if (idxOfNewline >= 0)
                 {
-                    line = new ReadOnlySequence<char>(r.Memory[..idxOfNewline]);
+                    line = new ReadOnlySequence<char>(r.UnreadMemory[..idxOfNewline]);
                     char ch = charBufferSpan[idxOfNewline];
                     if (ch == '\r')
                     {
@@ -140,7 +141,7 @@ namespace RuQu.Buffer
                 }
                 else
                 {
-                    line = new ReadOnlySequence<char>(r.Memory);
+                    line = new ReadOnlySequence<char>(r.UnreadMemory);
                     buffer.Consume(charBufferSpan.Length);
                     return true;
                 }
@@ -149,7 +150,7 @@ namespace RuQu.Buffer
             var next = buffer;
             do
             {
-                var charBufferSpan = next.Span;
+                var charBufferSpan = next.UnreadSpan;
                 int idxOfNewline = charBufferSpan.IndexOfAny('\r', '\n');
                 if (idxOfNewline >= 0)
                 {
@@ -176,6 +177,79 @@ namespace RuQu.Buffer
             line = new ReadOnlySequence<char>(f, buffer.Index, e, el - 1); ;
             buffer.Consume(el);
             return true;
+        }
+
+        public static bool IngoreCRLF(this IChunkReader<char> buffer)
+        {
+            if (buffer.TryPeek(out var c))
+            {
+                var r = false;
+                if (c is '\r')
+                {
+                    r = true;
+                    buffer.GetCurrentChunk().Consume(1);
+                    if (!buffer.TryPeek(out c))
+                    {
+                        return r;
+                    }
+                }
+
+                if (c is '\n')
+                {
+                    r = true;
+                    buffer.GetCurrentChunk().Consume(1);
+                }
+                return r;
+            }
+            return false;
+        }
+
+        public static ReadOnlySequence<T>? IndexOfAny<T>(this IChunkReader<T> buffer, T value0, T value1, T value2) where T : IEquatable<T>?
+        {
+            if (buffer.IsEOF)
+            {
+                return null;
+            }
+            if (buffer is ISingleChunkReader<T> fixedReaderBuffer)
+            {
+                var i = fixedReaderBuffer.UnreadSpan.IndexOfAny(value0, value1, value2);
+                if (i >= 0)
+                {
+                    var r = new ReadOnlySequence<T>(fixedReaderBuffer.UnreadMemory.Slice(0, i + 1));
+                    fixedReaderBuffer.Consume(i + 1);
+                    return r;
+                }
+                else 
+                {
+                    var r = new ReadOnlySequence<T>(fixedReaderBuffer.UnreadMemory);
+                    fixedReaderBuffer.Consume(fixedReaderBuffer.UnreadSpan.Length);
+                    return r;
+                }
+            }
+            var first = buffer.GetCurrentChunk();
+            var next = first;
+            var last = first;
+            var findex = first.Index;
+            do
+            {
+                last = next;
+                var charBufferSpan = next.UnreadSpan;
+                int idxOf = charBufferSpan.IndexOfAny(value0, value1, value2);
+                if (idxOf >= 0)
+                {
+                    var r = new ReadOnlySequence<T>(first as ReadOnlySequenceSegment<T>, findex, next as ReadOnlySequenceSegment<T>, first == next ? idxOf + 1 + findex : idxOf + 1);
+                    next.Consume(idxOf + 1);
+                    return r;
+                }
+                else
+                {
+                    next.Consume(charBufferSpan.Length);
+                    next = next.Next();
+                }
+            } while (next != null);
+            var rr = new ReadOnlySequence<T>(first as ReadOnlySequenceSegment<T>, findex, last as ReadOnlySequenceSegment<T>, last.Length > 0 ? last.Length - 1 : 0);
+            
+            return rr;
         }
     }
 }

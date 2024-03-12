@@ -18,9 +18,9 @@
             }
         }
 
-        public ReadOnlySpan<char> Span => data.AsSpan(index);
+        public ReadOnlySpan<char> UnreadSpan => data.AsSpan(index);
 
-        public ReadOnlyMemory<char> Memory => data.AsMemory(index);
+        public ReadOnlyMemory<char> UnreadMemory => data.AsMemory(index);
 
         public int Length => data.Length;
 

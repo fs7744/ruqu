@@ -2,8 +2,8 @@
 {
     public interface IChunk<T> : IDisposable
     {
-        public ReadOnlySpan<T> Span { get; }
-        public ReadOnlyMemory<T> Memory { get; }
+        public ReadOnlySpan<T> UnreadSpan { get; }
+        public ReadOnlyMemory<T> UnreadMemory { get; }
         public bool IsEOF { get; }
         public int Length { get; }
 

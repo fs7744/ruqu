@@ -90,6 +90,12 @@ namespace RuQu.UT
             Assert.Equal(2, reader.Header.Length);
             Assert.Equal(2, d.Length);
             Assert.Equal(4, d.SelectMany(i => i).Count());
+
+            using var reader1 = new CsvChunkReader(new StringReader(s), fristIsHeader: true);
+            var dd = reader1.ToArray();
+            Assert.Equal(2, reader1.Header.Length);
+            Assert.Equal(2, dd.Length);
+            Assert.Equal(4, dd.SelectMany(i => i).Count());
         }
 
         //[Fact]

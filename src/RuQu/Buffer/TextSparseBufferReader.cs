@@ -35,14 +35,15 @@ namespace RuQu.Buffer
             internal int index;
             private readonly TextSparseBufferReader textSparseBufferReader;
 
-            private new ReadOnlyMemory<char> Memory => base.Memory.Slice(index);
-            ReadOnlySpan<char> IChunk<char>.Span => base.Memory.Span.Slice(index);
+            ReadOnlySpan<char> IChunk<char>.UnreadSpan => base.Memory.Span.Slice(index);
 
             public int Length => base.Memory.Length;
 
             public int Index => index;
 
             public bool IsEOF => index >= base.Memory.Length;
+
+            ReadOnlyMemory<char> IChunk<char>.UnreadMemory => base.Memory.Slice(index);
 
             public char this[int index]
             {

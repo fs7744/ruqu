@@ -1,8 +1,164 @@
-﻿using RuQu.Reader;
+﻿using RuQu.Buffer;
+using RuQu.Reader;
 using System.Text;
 
 namespace RuQu.Csv
 {
+    public class CsvChunkReader : TextDataChunkReader<string[]>
+    {
+        public char Separater { get; private set; } = ',';
+
+        public bool HasHeader { get; private set; }
+
+        public string[] Header { get; private set; }
+
+        public int FieldCount { get; private set; }
+
+        public CsvChunkReader(string content, char separater = ',', bool fristIsHeader = false) : base(content)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public CsvChunkReader(TextReader reader, char separater = ',', bool fristIsHeader = false, int bufferSize = 128, SparseBufferGrowth growth = SparseBufferGrowth.Exponential) : base(reader, bufferSize, growth)
+        {
+            Separater = separater;
+            HasHeader = fristIsHeader;
+        }
+
+        public override bool MoveNext()
+        {
+            string[] row;
+            if (HasHeader && Header == null)
+            {
+                if (!ProcessFirstRow(out row))
+                {
+                    throw new ParseException("Missing header");
+                }
+                Header = row;
+            }
+
+            var r = FieldCount == 0 ? ProcessFirstRow(out row) : ProcessRow(out row);
+            Current = row;
+            return r;
+        }
+
+        private bool ProcessFirstRow(out string[]? row)
+        {
+            var r = new List<string>();
+            var hasValue = false;
+            while (ProcessField(out var f))
+            {
+                r.Add(f);
+                hasValue = true;
+            }
+            reader.IngoreCRLF();
+            row = r.ToArray();
+            FieldCount = row.Length;
+            return hasValue;
+        }
+
+        private bool TakeString(out string s)
+        {
+            throw new NotImplementedException();
+            //if (reader.IsEOF)
+            //{
+            //    throw new ParseException($"Expect some string end with '\"' at {reader.Index} but got eof");
+            //}
+
+            //int pos = 0;
+            //int len;
+            //ReadOnlySpan<char> remaining;
+            //do
+            //{
+            //ddd:
+            //    remaining = reader.Readed;
+            //    len = remaining.Length;
+            //    var charBufferSpan = remaining[pos..];
+            //    var i = charBufferSpan.IndexOf(Separater);
+            //    if (i >= 0)
+            //    {
+            //        if ((i + pos) == 0)
+            //        {
+            //            pos++;
+            //        }
+            //        else if (remaining[pos + i - 1] == '"')
+            //        {
+            //            s = remaining[..(i + pos)][..^1].ToString();
+            //            reader.GetCurrentChunk().Consume(pos + i + 1);
+            //            return true;
+            //        }
+            //        else
+            //        {
+            //            pos += i + 1;
+            //            goto ddd;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        pos = len;
+            //    }
+            //} while (reader.ReadNextBuffer(len));
+            //s = reader.Readed.ToString();
+            //return true;
+        }
+
+        private bool ProcessField(out string? f)
+        {
+            if (!reader.TryPeek(out var c) || reader.IngoreCRLF())
+            {
+                f = null;
+                return false;
+            }
+            if (c == Separater)
+            {
+                f = string.Empty;
+                reader.GetCurrentChunk().Consume(1);
+                return true;
+            }
+            else if (c is '"')
+            {
+                reader.GetCurrentChunk().Consume(1);
+                return TakeString(out f);
+            }
+            else
+            {
+                var i = reader.IndexOfAny(Separater, '\r', '\n');
+                if (!i.HasValue)
+                {
+                    f = string.Empty;
+                    return false;
+                }
+                else
+                {
+                    f = i.Value.ToString();
+                }
+                if (reader.TryPeek(out var cc) && cc == Separater)
+                {
+                    reader.GetCurrentChunk().Consume(1);
+                }
+                return true;
+            }
+        }
+
+        private bool ProcessRow(out string[]? row)
+        {
+            row = new string[FieldCount];
+
+            for (int i = 0; i < FieldCount; i++)
+            {
+                if (!ProcessField(out var f))
+                {
+                    reader.IngoreCRLF();
+                    return false;
+                }
+                row[i] = f;
+            }
+            reader.IngoreCRLF();
+            return true;
+        }
+    }
+
     public class CsvReader : TextDataReader<string[]>
     {
         public CsvReader(string content, char separater = ',', bool fristIsHeader = false) : base(content)
@@ -111,7 +267,7 @@ namespace RuQu.Csv
             ReadOnlySpan<char> remaining;
             do
             {
-                ddd:
+            ddd:
                 remaining = reader.Readed;
                 len = remaining.Length;
                 var charBufferSpan = remaining[pos..];
@@ -202,7 +358,6 @@ namespace RuQu.Csv
             reader.IngoreCRLF();
             return true;
         }
-
     }
 
     //public class CsvWriter
