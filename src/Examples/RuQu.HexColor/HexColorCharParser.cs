@@ -1,5 +1,4 @@
-﻿using RuQu.Buffer;
-using RuQu.Reader;
+﻿using RuQu.Reader;
 
 namespace RuQu
 {

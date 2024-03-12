@@ -10152,24 +10152,9 @@ namespace RuQu.Benchmark
         }
 
         [Benchmark]
-        public void RuQu_Read_Chunk_Csv_StringReader()
-        {
-            using var sr = new StringReader(testdata);
-            using var reader = new RuQu.Csv.CsvChunkReader(sr, fristIsHeader: true);
-            var d = reader.ToArray();
-        }
-
-        [Benchmark]
         public void RuQu_Read_Csv_String()
         {
             using var reader = new RuQu.Csv.CsvReader(testdata, fristIsHeader: true);
-            var d = reader.ToArray();
-        }
-
-        [Benchmark]
-        public void RuQu_Read_Chunk_Csv_String()
-        {
-            using var reader = new RuQu.Csv.CsvChunkReader(testdata, fristIsHeader: true);
             var d = reader.ToArray();
         }
 

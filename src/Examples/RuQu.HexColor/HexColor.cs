@@ -6,7 +6,5 @@ namespace RuQu
     {
         public static readonly HexColorStreamParser StreamParser = new HexColorStreamParser();
         public static readonly HexColorCharParser CharParser = new HexColorCharParser();
-
-        public static readonly HexColorChunkParser ChunkParser = new HexColorChunkParser();
     }
 }

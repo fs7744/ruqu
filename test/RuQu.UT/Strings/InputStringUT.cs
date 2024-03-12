@@ -24,10 +24,6 @@ namespace RuQu.UT
             Assert.Equal(47, red);
             Assert.Equal(21, green);
             Assert.Equal(223, blue);
-            (red, green, blue) = HexColor.ChunkParser.Read("#2F15DF");
-            Assert.Equal(47, red);
-            Assert.Equal(21, green);
-            Assert.Equal(223, blue);
         }
 
         //[Theory]
@@ -69,10 +65,6 @@ namespace RuQu.UT
             var a = IniParser.Instance.Read(s);
             Assert.Equal(2, a.Count);
             Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
-
-            a = new IniChunkParser().Read(s);
-            Assert.Equal(2, a.Count);
-            Assert.Equal(4, a.Values.SelectMany(i => i.Values).Count());
             var ss = IniParser.Instance.WriteToString(a);
         }
 
@@ -90,12 +82,6 @@ namespace RuQu.UT
             Assert.Equal(2, reader.Header.Length);
             Assert.Equal(2, d.Length);
             Assert.Equal(4, d.SelectMany(i => i).Count());
-
-            using var reader1 = new CsvChunkReader(new StringReader(s), fristIsHeader: true);
-            var dd = reader1.ToArray();
-            Assert.Equal(2, reader1.Header.Length);
-            Assert.Equal(2, dd.Length);
-            Assert.Equal(4, dd.SelectMany(i => i).Count());
         }
 
         //[Fact]
