@@ -1,26 +1,32 @@
-﻿using RuQu.Writer;
+﻿using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace RuQu.Reader
 {
-    public unsafe class ReadOnlySpanReaderBuffer<T> : IFixedReaderBuffer<T> where T : struct
+    public unsafe class ReadOnlySpanReaderBuffer<T> : MemoryManager<T>, IFixedReaderBuffer<T> where T : struct
     {
-        internal void* _buffer;
+        internal T* _buffer;
         internal int _offset;
         internal int _length;
         internal int _consumedCount;
 
         public ReadOnlySpanReaderBuffer(Span<T> span)
         {
-            _buffer = Unsafe.AsPointer(ref span.GetPinnableReference());
-            _length = span.Length;
+            fixed (T* ptr = &span.GetPinnableReference())
+            {
+                _buffer = ptr;
+                _length = span.Length;
+            }
         }
 
         public ReadOnlySpanReaderBuffer(ReadOnlySpan<T> span)
         {
-            _buffer = Unsafe.AsPointer(ref MemoryMarshal.GetReference(span));
-            _length = span.Length;
+            fixed (T* ptr = &MemoryMarshal.GetReference(span))
+            {
+                _buffer = ptr;
+                _length = span.Length;
+            }
         }
 
         public ReadOnlySpan<T> Readed
@@ -32,7 +38,7 @@ namespace RuQu.Reader
         public ReadOnlyMemory<T> ReadedMemory
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new UnmanagedMemoryManager<T>((IntPtr)Unsafe.Add<T>(_buffer, _offset), _length).Memory;
+            get => Memory.Slice(_offset);
         }
 
         public bool IsEOF
@@ -104,7 +110,7 @@ namespace RuQu.Reader
             {
                 return ValueTask.FromResult<ReadOnlyMemory<T>?>(null);
             }
-            return ValueTask.FromResult<ReadOnlyMemory<T>?>(new UnmanagedMemoryManager<T>((IntPtr)Unsafe.Add<T>(_buffer, _offset), count).Memory);
+            return ValueTask.FromResult<ReadOnlyMemory<T>?>(ReadedMemory.Slice(0, count));
         }
 
         public ValueTask<T?> PeekAsync(CancellationToken cancellationToken = default)
@@ -130,5 +136,25 @@ namespace RuQu.Reader
         public bool ReadNextBuffer(int count) => false;
 
         public ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool>(false);
+
+        protected override void Dispose(bool disposing)
+        {
+        }
+
+        public override Span<T> GetSpan()
+        {
+            return new Span<T>(_buffer, _length);
+        }
+
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            if (elementIndex < 0 || elementIndex >= _length)
+                throw new ArgumentOutOfRangeException(nameof(elementIndex));
+            return new MemoryHandle(_buffer + elementIndex);
+        }
+
+        public override void Unpin()
+        {
+        }
     }
 }
