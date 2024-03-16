@@ -1,11 +1,10 @@
-﻿using RuQu.Writer;
-using System;
+﻿using System.Buffers;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 
 namespace RuQu.Reader
 {
-    public unsafe class MemoryMappedFileReaderBuffer : IFixedReaderBuffer<byte>
+    public unsafe class MemoryMappedFileReaderBuffer : MemoryManager<byte>, IFixedReaderBuffer<byte>
     {
         private readonly byte* _pointer;
         private readonly int _fileLength;
@@ -34,7 +33,7 @@ namespace RuQu.Reader
         public ReadOnlyMemory<byte> ReadedMemory
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new UnmanagedMemoryManager<byte>((IntPtr)Unsafe.Add<byte>(_pointer, _offset), _fileLength).Memory;
+            get => Memory.Slice(_offset);
         }
 
         public bool IsEOF
@@ -108,7 +107,7 @@ namespace RuQu.Reader
             {
                 return ValueTask.FromResult<ReadOnlyMemory<byte>?>(null);
             }
-            return ValueTask.FromResult<ReadOnlyMemory<byte>?>(new UnmanagedMemoryManager<byte>((IntPtr)Unsafe.Add<byte>(_pointer, _offset), count).Memory);
+            return ValueTask.FromResult<ReadOnlyMemory<byte>?>(ReadedMemory.Slice(0, count));
         }
 
         public ValueTask<byte?> PeekAsync(CancellationToken cancellationToken = default)
@@ -134,5 +133,29 @@ namespace RuQu.Reader
         public bool ReadNextBuffer(int count) => false;
 
         public ValueTask<bool> ReadNextBufferAsync(int count, CancellationToken cancellationToken = default) => ValueTask.FromResult<bool>(false);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Dispose();
+            }
+        }
+
+        public override Span<byte> GetSpan()
+        {
+            return new Span<byte>(_pointer, _fileLength);
+        }
+
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            if (elementIndex < 0 || elementIndex >= _fileLength)
+                throw new ArgumentOutOfRangeException(nameof(elementIndex));
+            return new MemoryHandle(_pointer + elementIndex);
+        }
+
+        public override void Unpin()
+        {
+        }
     }
 }
