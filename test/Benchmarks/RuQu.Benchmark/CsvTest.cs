@@ -2,6 +2,8 @@
 using CsvHelper.Configuration;
 using CsvHelper;
 using System.Globalization;
+using nietras.SeparatedValues;
+using System.Data;
 
 namespace RuQu.Benchmark
 {
@@ -10118,10 +10120,17 @@ namespace RuQu.Benchmark
                 3sss,3333
                 """;
 
+        private string testdata2;
+
         private CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             Mode = CsvMode.RFC4180,
         };
+
+        public CsvTest()
+        {
+            testdata2 = File.ReadAllText("D:\\test.CSV");
+        }
 
         [Benchmark]
         public void CsvHelper_Read()
@@ -10158,35 +10167,167 @@ namespace RuQu.Benchmark
             var d = reader.ToArray();
         }
 
-        //[IterationCount(2)]
-        //[Benchmark]
-        //public void CsvHelper_file()
-        //{
-        //    using var f = File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv");
-        //    using var sr = new StreamReader(f);
-        //    using var csv = new CsvHelper.CsvReader(sr, config);
-        //    var records = new List<string[]>();
-        //    csv.Read();
-        //    csv.ReadHeader();
-        //    while (csv.Read())
-        //    {
-        //        var record = new string[csv.ColumnCount];
-        //        for (var i = 0; i < record.Length; i++)
-        //        {
-        //            record[i] = csv.GetField(i);
-        //        }
-        //        records.Add(record);
-        //    }
-        //}
+        [Benchmark]
+        public void Sep_Read_Csv()
+        {
+            using var csv = Sep.Reader().FromText(testdata);
+            var records = new List<string[]>();
+            foreach (var r in csv)
+            {
+                var record = new string[r.ColCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = r[i].ToString();
+                }
+                records.Add(record);
+            }
+        }
 
-        //[IterationCount(2)]
-        //[Benchmark]
-        //public void RuQu_Read_Csv_file()
-        //{
-        //    using var f = File.OpenRead("E:\\book\\dbip-city-lite-2024-03.csv");
-        //    using var reader = new RuQu.Csv.CsvReader(f, bufferSize: 4096, fristIsHeader: false);
-        //    var d = reader.ToArray();
-        //}
+        [Benchmark]
+        public void Sylvan_Read_Csv()
+        {
+            using var sr = new StringReader(testdata);
+            using var csv = Sylvan.Data.Csv.CsvDataReader.Create(sr);
+            var records = new List<string[]>();
+            while (csv.Read())
+            {
+                var record = new string[csv.RowFieldCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = csv.GetString(i);
+                }
+                records.Add(record);
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void CsvHelper_file()
+        {
+            using var f = File.OpenRead("D:\\test.CSV");
+            using var sr = new StreamReader(f);
+            using var csv = new CsvHelper.CsvReader(sr, config);
+            csv.Read();
+            csv.ReadHeader();
+            while (csv.Read())
+            {
+                var record = new string[csv.ColumnCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = csv.GetField(i);
+                }
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void RuQu_Read_Csv_file()
+        {
+            using var f = File.OpenRead("D:\\test.CSV");
+            using var reader = new RuQu.Csv.CsvReader(f, bufferSize: 4096, fristIsHeader: false);
+            foreach (var item in reader)
+            {
+                
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void Sep_Read_Csv_file()
+        {
+            using var reader = Sep.Reader(i => 
+            {
+                return new SepReaderOptions() { HasHeader = false, Unescape = true };
+
+            }).FromFile("D:\\test.CSV");
+            foreach (var r in reader)
+            {
+                var record = new string[r.ColCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = r[i].ToString();
+                }
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void Sylvan_Read_Csv_file()
+        {
+            using var csv = Sylvan.Data.Csv.CsvDataReader.Create("D:\\test.CSV", new Sylvan.Data.Csv.CsvDataReaderOptions() { HasHeaders = false });
+            while (csv.Read())
+            {
+                var record = new string[csv.RowFieldCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = csv.GetString(i);
+                }
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void CsvHelper_file_string()
+        {
+            using var sr = new StringReader(testdata2);
+            using var csv = new CsvHelper.CsvReader(sr, config);
+            csv.Read();
+            csv.ReadHeader();
+            while (csv.Read())
+            {
+                var record = new string[csv.ColumnCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = csv.GetField(i);
+                }
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void RuQu_Read_Csv_file_string()
+        {
+            using var reader = new RuQu.Csv.CsvReader(testdata2, fristIsHeader: false);
+            foreach (var item in reader)
+            {
+
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void Sep_Read_Csv_file_string()
+        {
+            using var reader = Sep.Reader(i =>
+            {
+                return new SepReaderOptions() { HasHeader = false, Unescape = true };
+
+            }).FromText(testdata2);
+            foreach (var r in reader)
+            {
+                var record = new string[r.ColCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = r[i].ToString();
+                }
+            }
+        }
+
+        [IterationCount(1)]
+        [Benchmark]
+        public void Sylvan_Read_Csv_file_string()
+        {
+            using var sr = new StringReader(testdata2);
+            using var csv = Sylvan.Data.Csv.CsvDataReader.Create(sr, new Sylvan.Data.Csv.CsvDataReaderOptions() { HasHeaders = false });
+            while (csv.Read())
+            {
+                var record = new string[csv.RowFieldCount];
+                for (var i = 0; i < record.Length; i++)
+                {
+                    record[i] = csv.GetString(i);
+                }
+            }
+        }
 
         //[IterationCount(2)]
         //[Benchmark]

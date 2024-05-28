@@ -3,7 +3,7 @@ using System.Text;
 
 namespace RuQu.Csv
 {
-    public class CsvReader : TextDataReader<string[]>
+    public class CsvReader : TextDataReader<List<string>>
     {
         public CsvReader(string content, char separater = ',', bool fristIsHeader = false) : base(content)
         {
@@ -69,33 +69,33 @@ namespace RuQu.Csv
 
         public override bool MoveNext()
         {
-            string[] row;
+            List<string> row;
             if (HasHeader && Header == null)
             {
                 if (!ProcessFirstRow(out row))
                 {
                     throw new ParseException("Missing header");
                 }
-                Header = row;
+                Header = row.ToArray();
             }
 
             var r = FieldCount == 0 ? ProcessFirstRow(out row) : ProcessRow(out row);
             Current = row;
             return r;
         }
-
-        private bool ProcessFirstRow(out string[]? row)
+        private List<string> rr = new ();
+        private bool ProcessFirstRow(out List<string>? row)
         {
-            var r = new List<string>();
+            rr.Clear();
             var hasValue = false;
             while (ProcessField(out var f))
             {
-                r.Add(f);
+                rr.Add(f);
                 hasValue = true;
             }
             reader.IngoreCRLF();
-            row = r.ToArray();
-            FieldCount = row.Length;
+            row = rr;
+            FieldCount = row.Count;
             return hasValue;
         }
 
@@ -115,7 +115,7 @@ namespace RuQu.Csv
                 remaining = reader.Readed;
                 len = remaining.Length;
                 var charBufferSpan = remaining[pos..];
-                var i = charBufferSpan.IndexOf(Separater);
+                var i = charBufferSpan.IndexOfAny(Separater, '\r', '\n');
                 if (i >= 0)
                 {
                     if ((i + pos) == 0)
@@ -186,9 +186,10 @@ namespace RuQu.Csv
             }
         }
 
-        private bool ProcessRow(out string[]? row)
+        private bool ProcessRow(out List<string>? row)
         {
-            row = new string[FieldCount];
+            rr.Clear();
+            row = rr;
 
             for (int i = 0; i < FieldCount; i++)
             {
@@ -197,7 +198,8 @@ namespace RuQu.Csv
                     reader.IngoreCRLF();
                     return false;
                 }
-                row[i] = f;
+                row.Add(f);
+                //row[i] = f;
             }
             reader.IngoreCRLF();
             return true;
