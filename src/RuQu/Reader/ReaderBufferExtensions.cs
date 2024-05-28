@@ -104,6 +104,36 @@ namespace RuQu.Reader
             return -1;
         }
 
+        public static int LastIndexOfAny<T>(this IReaderBuffer<T> buffer, T value0, T value1) where T : struct, IEquatable<T>?
+        {
+            if (buffer.IsEOF)
+            {
+                return -1;
+            }
+            if (buffer is IFixedReaderBuffer<T> fixedReaderBuffer)
+            {
+                return fixedReaderBuffer.Readed.LastIndexOfAny(value0, value1);
+            }
+            int pos = 0;
+            int len;
+            do
+            {
+                var r = buffer.Readed;
+                len = r.Length;
+                var charBufferSpan = r[pos..];
+                int idxOf = charBufferSpan.LastIndexOfAny(value0, value1);
+                if (idxOf >= 0)
+                {
+                    return idxOf + pos;
+                }
+                else
+                {
+                    pos += charBufferSpan.Length;
+                }
+            } while (buffer.ReadNextBuffer(len));
+            return -1;
+        }
+
 
         public static int IndexOf<T>(this IReaderBuffer<T> buffer, T value) where T : struct, IEquatable<T>?
         {

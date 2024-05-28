@@ -2,7 +2,7 @@
 using RuQu.Benchmark;
 
 var a = new CsvTest();
-//a.Sep_Read_Csv_file();
+//a.RuQu_Read_Csv_file_string();
 //a.CsvHelper_file();
 //a.Sylvan_Read_Csv();
 //a.Sep_Read_Csv();

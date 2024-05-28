@@ -1,4 +1,5 @@
 ﻿using RuQu.Reader;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace RuQu.Csv
@@ -86,6 +87,7 @@ namespace RuQu.Csv
         private List<string> rr = new ();
         private bool ProcessFirstRow(out List<string>? row)
         {
+            reader.LastIndexOfAny('\r', '\n');
             rr.Clear();
             var hasValue = false;
             while (ProcessField(out var f))
@@ -188,6 +190,7 @@ namespace RuQu.Csv
 
         private bool ProcessRow(out List<string>? row)
         {
+            reader.LastIndexOfAny('\r', '\n');
             rr.Clear();
             row = rr;
 
